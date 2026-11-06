@@ -641,6 +641,8 @@ def judge(workers: int | None = None, universes=None, symbols=None) -> dict:
     ind_neutral = bool(_params.get("tw_industry_neutral_valuation"))
     t0 = time.time()
     pl = plan(universes, symbols)
+    if not pl:
+        raise SystemExit("沒有要計算的公司:給的代號都不在這些股票池裡")
     need: dict[tuple[str, str], set] = {}
     for u, pairs in pl.items():
         for d, s in pairs:

@@ -189,7 +189,10 @@ async function researchPoll() {
   try { j = await api("/api/setup/research/status"); } catch (e) { return; }
   const box = researchBox();
   if (j.running) {
-    if (box) box.textContent = `${ut("research.running")} ${j.line || ""}`;
+    if (box) {
+      box.textContent = `${ut("research.running")} ${j.line || ""}`;
+      box.closest(".su-main, .su-inline")?.querySelector(".su-warn")?.remove();   // 上次的失敗原因不適用於這次
+    }
     researchTimer = setTimeout(researchPoll, 3000);
     return;
   }

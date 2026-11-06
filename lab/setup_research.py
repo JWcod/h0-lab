@@ -188,6 +188,40 @@ def compute(symbols: list[str] | None, universes: str = UNIVERSES) -> int:
     return 0
 
 
+def compute_and_check(tw: list[str], us: list[str], subset: bool, bad: list[str]) -> int:
+    """下載之後:在本機計算,再判斷這次算不算完成。"""
+    refused = any(x.startswith(SEC_REFUSED) for x in bad)
+    rc = compute(tw + us if subset else None, wanted_universes(tw, us))
+    if rc != 0:
+        say(f"本機計算失敗(結束碼 {rc});把上面的訊息貼給開發者,或重跑一次")
+        # 計算的結束碼不直接傳回去:它和這裡的結束碼是兩回事,傳回去介面會顯示錯的訊息
+        return EXIT_SEC_REFUSED if refused and us else EXIT_FAILED
+    missing = incomplete_markets(tw, us, config.DATA_DIR)
+    if missing:
+        say(f"沒有完成:{'、'.join(missing)} 的回測資料不齊。修好上面列的問題後再跑一次,已下載的資料會保留。")
+        return EXIT_SEC_REFUSED if refused and "US" in missing else EXIT_INCOMPLETE
+    if bad:
+        say(f"完成,但有 {len(bad)} 項沒抓到,結果會少這些資料;再跑一次可以補。")
+        return EXIT_SEC_REFUSED if refused else EXIT_PARTIAL
+    say("完成。回到網站重新整理,「選風格建模型」第 3 步就能看到排名與過去表現。")
+    return 0
+
+
+def record_result(code: int, bad: list[str]) -> None:
+    """記下結果:介面重新開啟後才知道這次沒有完全成功,要繼續顯示原因和按鈕。
+    同樣的項目連續兩次都抓不到,多半是永遠抓不到(例如下市),就不再要求重試,否則引導卡永遠關不掉。"""
+    from .setup_job import EXIT_MESSAGES
+    from .setup_status import PARTIAL_ACCEPTED, previous_missing, save_research_result
+    result = EXIT_MESSAGES.get(code, "failed")
+    if result == "partial" and previous_missing() == sorted(bad):
+        say("這些資料連續兩次都抓不到,不再提醒重試;想補抓還是可以重跑。")
+        result = PARTIAL_ACCEPTED
+    try:
+        save_research_result(result, sorted(bad))
+    except OSError as e:   # 記不下來不該把建好的資料變成失敗
+        say(f"無法記錄這次的結果({type(e).__name__})")
+
+
 def has_full_research(data_dir: Path) -> bool:
     """已經有完整版回測資料(tw_pit50,開發者用的完整股票池):精簡版會把它蓋掉,所以不跑。"""
     return (data_dir / "bt_pit" / "rows_tw_pit50.csv").exists()
@@ -215,6 +249,7 @@ def main(argv=None) -> int:
     if has_full_research(config.DATA_DIR) and not a.force:
         say("這台電腦已經有完整版回測資料(bt_pit/rows_tw_pit50.csv),精簡版會把它蓋掉,所以不執行。"
             "確定要覆寫才加 --force。")
+        record_result(3, [])   # 舊的失敗結果不再適用,不然引導卡會留著一個按了也沒用的按鈕
         return 3
     if config.OFFLINE:
         say("現在是離線模式(INVEST_LAB_OFFLINE=1),不能下載;拿掉這個設定再跑")
@@ -226,29 +261,13 @@ def main(argv=None) -> int:
         return 4
     if bad:
         say(f"有 {len(bad)} 項沒抓到(稍後重跑這支腳本會再補):" + "、".join(bad[:15]))
-    refused = any(x.startswith(SEC_REFUSED) for x in bad)
-
-    def finish(code: int) -> int:
-        """記下結果:介面重新開啟後才知道這次沒有完全成功,要繼續顯示原因和按鈕。"""
-        from .setup_job import EXIT_MESSAGES
-        from .setup_status import save_research_result
-        save_research_result(EXIT_MESSAGES.get(code, "failed"))
-        return code
-
-    rc = compute(tw + us if subset else None, wanted_universes(tw, us))
-    if rc != 0:
-        say(f"本機計算失敗(結束碼 {rc});把上面的訊息貼給開發者,或重跑一次")
-        # 計算的結束碼不直接傳回去:它和這裡的結束碼是兩回事,傳回去介面會顯示錯的訊息
-        return finish(EXIT_SEC_REFUSED if refused and us else EXIT_FAILED)
-    missing = incomplete_markets(tw, us, config.DATA_DIR)
-    if missing:
-        say(f"沒有完成:{'、'.join(missing)} 的回測資料不齊。修好上面列的問題後再跑一次,已下載的資料會保留。")
-        return finish(EXIT_SEC_REFUSED if refused and "US" in missing else EXIT_INCOMPLETE)
-    if bad:
-        say(f"完成,但有 {len(bad)} 項沒抓到,結果會少這些資料;再跑一次可以補。")
-        return finish(EXIT_SEC_REFUSED if refused else EXIT_PARTIAL)
-    say("完成。回到網站重新整理,「選風格建模型」第 3 步就能看到排名與過去表現。")
-    return finish(0)
+    try:
+        code = compute_and_check(tw, us, subset, bad)
+    except Exception:
+        record_result(EXIT_FAILED, bad)
+        raise
+    record_result(code, bad)
+    return code
 
 
 if __name__ == "__main__":   # lab/setup_job.py 在原始碼模式用 python -m 執行

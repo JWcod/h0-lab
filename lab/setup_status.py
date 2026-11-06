@@ -27,24 +27,36 @@ RESEARCH = {"requests": 520, "minutes": 20, "minutes_with_token": 20, "build_min
 RESULT_FILE = "setup_research_result.json"
 # 上次建立沒有完全成功:就算檔案都在也要留著步驟和按鈕,使用者才能再試(結果名稱同 lab/setup_job.py EXIT_MESSAGES)
 RETRY_RESULTS = ("failed", "incomplete", "sec_refused", "partial")
+PARTIAL_ACCEPTED = "partial_accepted"   # 同樣的項目連續兩次抓不到:資料可用,不再要求重試
 
 
-def save_research_result(result: str, out_dir: Path | None = None) -> None:
+def save_research_result(result: str, missing: list[str] | None = None, out_dir: Path | None = None) -> None:
     d = out_dir if out_dir is not None else config.OUT_DIR
     d.mkdir(parents=True, exist_ok=True)
     tmp = d / (RESULT_FILE + ".tmp")
-    tmp.write_text(json.dumps({"result": result}), encoding="utf-8")
+    tmp.write_text(json.dumps({"result": result, "missing": missing or []}, ensure_ascii=False), encoding="utf-8")
     tmp.replace(d / RESULT_FILE)
+
+
+def _read_result(out_dir: Path | None) -> dict:
+    d = out_dir if out_dir is not None else config.OUT_DIR
+    try:
+        saved = json.loads((d / RESULT_FILE).read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+    return saved if isinstance(saved, dict) else {}
 
 
 def last_research_result(out_dir: Path | None = None) -> str | None:
     """上次建立要使用者再試的結果;沒有、已成功或檔案壞掉都回 None。"""
-    d = out_dir if out_dir is not None else config.OUT_DIR
-    try:
-        result = json.loads((d / RESULT_FILE).read_text(encoding="utf-8"))["result"]
-    except (OSError, ValueError, KeyError, TypeError):
-        return None
+    result = _read_result(out_dir).get("result")
     return result if result in RETRY_RESULTS else None
+
+
+def previous_missing(out_dir: Path | None = None) -> list[str] | None:
+    """上次也是部分成功時,當時沒抓到的項目;其他情況回 None。"""
+    saved = _read_result(out_dir)
+    return saved.get("missing") if saved.get("result") in ("partial", PARTIAL_ACCEPTED) else None
 
 
 def _nonempty_dir(p: Path) -> bool:

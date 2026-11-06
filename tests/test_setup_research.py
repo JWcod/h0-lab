@@ -121,13 +121,16 @@ def _http_error(code):
     return requests.HTTPError(response=resp)
 
 
+_computed = []
+
+
 def _run_main(monkeypatch, tmp_path, bad, ready=("TW", "US"), args=("--tw", "2330", "--us", "AAPL")):
     """跑 main 但不連網也不計算:下載結果與資料是否齊全都由測試決定。"""
     monkeypatch.setattr(LR.config, "DATA_DIR", tmp_path)
     monkeypatch.setattr(LR.config, "OFFLINE", False)
     monkeypatch.setattr(LR, "todo", lambda tw, us: _t())
     monkeypatch.setattr(LR, "download", lambda t: list(bad))
-    monkeypatch.setattr(LR, "compute", lambda symbols, universes: 0)
+    monkeypatch.setattr(LR, "compute", lambda symbols, universes: _computed.append(universes) or 0)
     for market, files in setup_status.RESEARCH_FILES.items():
         if market in ready:
             d = tmp_path / "bt_pit"
@@ -195,6 +198,66 @@ def test_clean_run_is_done(monkeypatch, tmp_path, capsys):
 
 def test_single_market_subset_ignores_the_other_market(monkeypatch, tmp_path):
     assert _run_main(monkeypatch, tmp_path, [], ready=("TW",), args=("--tw", "2330")) == 0
+    assert _computed[-1] == "tw_large40"
+
+
+def _research_step(tmp_path):
+    st = setup_status.status(root=tmp_path, data_dir=tmp_path, out_dir=tmp_path, private_dir=tmp_path, snapshot_dir=tmp_path)
+    return next(s for s in st["steps"] if s["id"] == "research")
+
+
+def test_same_items_missing_twice_stops_asking_to_retry(monkeypatch, tmp_path):
+    """永遠抓不到的資料(例如下市代號)不能讓引導卡永遠關不掉;代號換了就還是要提醒。"""
+    assert _run_main(monkeypatch, tmp_path, ["Yahoo X"]) == LR.EXIT_PARTIAL
+    assert _research_step(tmp_path)["done"] is False
+    assert _run_main(monkeypatch, tmp_path, ["Yahoo X"]) == LR.EXIT_PARTIAL
+    assert _research_step(tmp_path)["done"] is True
+    assert _run_main(monkeypatch, tmp_path, ["Yahoo X"]) == LR.EXIT_PARTIAL
+    assert _research_step(tmp_path)["done"] is True
+    assert _run_main(monkeypatch, tmp_path, ["Yahoo Y"]) == LR.EXIT_PARTIAL
+    assert _research_step(tmp_path)["done"] is False
+
+
+def test_repeated_sec_refusal_keeps_asking(monkeypatch, tmp_path):
+    bad = [f"{LR.SEC_REFUSED}(HTTP 403)"]
+    for _ in range(2):
+        assert _run_main(monkeypatch, tmp_path, bad) == LR.EXIT_SEC_REFUSED
+    assert _research_step(tmp_path)["last_result"] == "sec_refused"
+
+
+def test_full_research_clears_an_earlier_failure(monkeypatch, tmp_path):
+    _run_main(monkeypatch, tmp_path, ["Yahoo X"])
+    (tmp_path / "bt_pit" / "rows_tw_pit50.csv").write_text("", encoding="utf-8")
+    assert _run_main(monkeypatch, tmp_path, []) == 3
+    assert setup_status.last_research_result(tmp_path) is None
+
+
+def test_unexpected_error_after_download_is_recorded_as_failed(monkeypatch, tmp_path):
+    def boom(symbols, universes):
+        raise RuntimeError("x")
+    monkeypatch.setattr(LR.config, "DATA_DIR", tmp_path)
+    monkeypatch.setattr(LR.config, "OFFLINE", False)
+    monkeypatch.setattr(LR, "todo", lambda tw, us: _t())
+    monkeypatch.setattr(LR, "download", lambda t: [])
+    monkeypatch.setattr(LR, "compute", boom)
+    with pytest.raises(RuntimeError):
+        LR.main(["--tw", "2330"])
+    assert setup_status.last_research_result(tmp_path) == "failed"
+
+
+def test_failing_to_record_does_not_fail_a_good_build(monkeypatch, tmp_path, capsys):
+    def denied(*a, **k):
+        raise PermissionError("read-only")
+    monkeypatch.setattr(setup_status, "save_research_result", denied)
+    assert _run_main(monkeypatch, tmp_path, []) == 0
+    assert "無法記錄" in capsys.readouterr().out
+
+
+def test_judge_explains_when_no_symbol_matches(monkeypatch):
+    from lab.research import backtest_pit as BP
+    monkeypatch.setattr(BP, "plan", lambda universes, symbols: {})
+    with pytest.raises(SystemExit, match="沒有要計算的公司"):
+        BP.judge(1, ["tw_large40"], ["ZZZ"])
 
 
 def test_every_exit_code_has_interface_text():

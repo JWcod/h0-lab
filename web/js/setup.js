@@ -45,7 +45,7 @@ const stepTitle = (s) => (s.id === "sec_user_agent" ? ut("first.sec.title") : t(
 function researchBody(s) {
   const vars = { d: durationText(s?.minutes) || "—", b: durationText(s?.build_minutes) || "—" };
   // 上次沒有完全成功:重新開啟後還是要看得到原因,才知道為什麼這一步還在
-  const lastResult = s?.job && s?.last_result ? `<p class="su-warn" role="note">${esc(ut("research.err." + s.last_result))}</p>` : "";
+  const lastResult = s?.last_result ?`<p class="su-warn" role="note">${esc(ut("research.err." + s.last_result))}</p>` : "";
   return `${lastResult}<p class="su-body">${esc(s?.job ? ut("research.body", vars) : t("setup.step.research.body", vars))}</p>
     ${researchAction(s)}
     <p class="su-note">${esc(t("setup.step.research.note"))}</p>`;
