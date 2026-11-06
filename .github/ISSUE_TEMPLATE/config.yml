@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Questions and ideas / 問題與想法
+    url: https://github.com/JWcod/h0-lab/discussions
+    about: Ask questions and discuss ideas in GitHub Discussions.
+  - name: Security problem / 安全問題
+    url: https://github.com/JWcod/h0-lab/security/advisories/new
+    about: Report vulnerabilities privately. Do not open a public issue.

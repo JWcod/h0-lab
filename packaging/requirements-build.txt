@@ -1,0 +1,15 @@
+# 打包與發版工具(只裝在暫存或 CI 的獨立 venv,不進 .venv;原始碼安裝用不到這些)
+# cryptography 只給 release_tools.py 產生金鑰與簽章,打包時排除
+pyinstaller==6.22.3
+pyinstaller-hooks-contrib==2026.9
+cryptography==50.0.2
+# App 的原生視窗(只有打包版用;BSD / MIT 授權,會列進第三方授權清單)
+pywebview==6.2.1
+pyobjc-core==13.0
+pyobjc-framework-Cocoa==13.0
+pyobjc-framework-Quartz==13.0
+pyobjc-framework-Security==13.0
+pyobjc-framework-UniformTypeIdentifiers==13.0
+pyobjc-framework-WebKit==13.0
+bottle==0.13.4
+proxy_tools==0.1.0

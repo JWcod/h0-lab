@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>元件展示 · H0 Lab</title>
+  <link rel="stylesheet" href="/static/css/tokens.css">
+  <link rel="stylesheet" href="/static/css/ui.css">
+  <style>body { margin: 0; background: var(--bg); }</style>
+</head>
+<body>
+<!-- 設計系統元件展示(階段 3 D2):開發與驗證用,不在導覽列。數字都是示意,不是模型結果。 -->
+<div class="u-shell">
+  <nav class="u-side" aria-label="主要導覽">
+    <h2>研究</h2>
+    <button class="u-nav" aria-current="page"><span class="u-ic" aria-hidden="true">◉</span>元件展示</button>
+    <button class="u-nav"><span class="u-ic" aria-hidden="true">◉</span>台積電<span class="u-x u-down">−2.01%</span></button>
+    <h2>模型</h2>
+    <button class="u-nav"><span class="u-ic" aria-hidden="true">◎</span>證據</button>
+  </nav>
+  <div class="u-main">
+    <header class="u-toolbar"><span class="u-title">元件展示</span><span class="u-sp"></span>
+      <div class="u-seg" role="group" aria-label="主題"><button aria-pressed="true" data-theme="">跟系統</button><button aria-pressed="false" data-theme="dark">深色</button><button aria-pressed="false" data-theme="light">淺色</button></div>
+    </header>
+    <main class="u-content" id="content">
+      <h1 class="u-largetitle">元件展示</h1>
+      <p class="u-sub">設計系統 D2。數字是示意,不是模型結果。</p>
+
+      <h2 class="u-label">證據標籤</h2>
+      <div class="u-card" id="evs" style="display:flex;flex-wrap:wrap;gap:10px"></div>
+
+      <h2 class="u-label">現價 vs 公平價</h2>
+      <div class="u-grid" id="ranges"></div>
+
+      <h2 class="u-label" style="margin-top:14px">分數環</h2>
+      <div class="u-card"><div class="u-rings" id="rings"></div></div>
+
+      <h2 class="u-label">信賴區間</h2>
+      <div class="u-card" id="cis"></div>
+
+      <h2 class="u-label">清單</h2>
+      <ul class="u-list" id="list"></ul>
+
+      <h2 class="u-label">分析進度</h2>
+      <div class="u-card"><div id="steps"></div><div style="margin-top:12px"><button class="u-btn is-primary" id="runSteps">示範</button></div></div>
+
+      <p class="u-disclaimer" role="contentinfo">本平台是個人研究工具,所有分數、評等與回測結果都是模型輸出,不構成投資建議,也不保證任何報酬。</p>
+    </main>
+  </div>
+  <nav class="u-tabbar" aria-label="主要導覽">
+    <button class="u-tab" aria-current="page"><span class="u-ic" aria-hidden="true">◉</span>研究</button>
+    <button class="u-tab"><span class="u-ic" aria-hidden="true">◎</span>證據</button>
+    <button class="u-tab"><span class="u-ic" aria-hidden="true">≡</span>掃描</button>
+    <button class="u-tab"><span class="u-ic" aria-hidden="true">⋯</span>更多</button>
+  </nav>
+</div>
+<script type="module" src="/static/js/design.js"></script>
+</body>
+</html>

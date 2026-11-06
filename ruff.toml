@@ -1,0 +1,2 @@
+# 開發工作階段的 worktree、離線輸出、資料不做靜態檢查
+extend-exclude = [".claude", ".worktrees", ".agent_out", "scratch", "data"]

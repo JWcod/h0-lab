@@ -1,0 +1,74 @@
+<!doctype html>
+<!-- 主題跟系統設定(prefers-color-scheme):深色、淺色都支援,不強制(階段 3 D3 第 4 部分) -->
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <title>H0 Lab</title>
+  <meta name="description" content="H0 Lab:開源的量化選股研究平台。查個股、建立自己的選股模型,並用不偷看未來的回測誠實驗證。">
+  <link rel="stylesheet" href="/static/css/app.css">
+  <link rel="stylesheet" href="/static/css/tokens.css">
+  <link rel="stylesheet" href="/static/css/ui.css">
+  <link rel="stylesheet" href="/static/css/models.css">
+  <link rel="stylesheet" href="/static/css/wizard.css">
+  <link rel="stylesheet" href="/static/css/update.css">
+  <link rel="stylesheet" href="/static/css/palette.css">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cpath fill='%2314161A' d='M158 0H354C460 0 512 52 512 158V354C512 460 460 512 354 512H158C52 512 0 460 0 354V158C0 52 52 0 158 0Z'/%3E%3Cpath fill='%23F4F1EA' d='M52 385C63.3 383.5 74.7 381 86 376C97.3 371.1 108.7 363.5 120 351.2C131.3 338.9 142.7 321.8 154 299.7C165.3 277.6 176.7 250.5 188 223C199.3 195.5 210.7 168 222 148C233.3 128 244.7 116 256 116C267.3 116 278.7 128 290 148C301.3 168 312.7 195.5 324 223C335.3 250.5 346.7 277.6 358 299.7C369.3 321.8 380.7 338.9 392 351.2C403.3 363.5 414.7 371.1 426 376C437.3 381 448.7 383.5 460 385V388H52Z'/%3E%3Cpath fill='%23E8583B' d='M367.9 317.7C375.5 330.8 383.2 341.5 390.9 350C398.6 358.5 406.3 364.9 413.9 369.7C421.6 374.5 429.3 377.7 437 380.1C444.6 382.5 452.3 384 460 385V388H367.9Z'/%3E%3C/svg%3E">
+</head>
+<body>
+  <!-- 全站外框(階段 3 D3 第 2 部分):電腦 macOS 側邊欄 + 工具列;手機 iOS 底部標籤列。元素 id 沿用,app.js 依賴它們 -->
+  <div class="u-shell app-shell">
+    <nav class="u-side" aria-label="主要導覽">
+      <button class="u-nav app-brand" id="brand" aria-label="H0 Lab 首頁"><span class="logo" aria-hidden="true"><img src="/static/img/h0-logo.svg" alt="" width="30" height="30"></span><span class="app-brand-t">H0 Lab<small>量化選股研究</small></span></button>
+      <h2>研究</h2>
+      <button class="u-nav" id="navHome" data-route=""><span class="u-ic" data-ic="home" aria-hidden="true">◉</span>首頁</button>
+      <button class="u-nav" id="navScan" data-route="scan"><span class="u-ic" data-ic="scan" aria-hidden="true">≡</span>選股掃描</button>
+      <div id="sideWatch" aria-label="觀察清單"></div>
+      <h2>模型</h2>
+      <button class="u-nav" id="navWizard" data-route="wizard"><span class="u-ic" data-ic="wizard" aria-hidden="true">✦</span><span id="navWizardTxt">建立模型</span></button>
+      <button class="u-nav" id="navModels" data-route="models"><span class="u-ic" data-ic="models" aria-hidden="true">⚖</span>模型工作台</button>
+      <h2>驗證</h2>
+      <button class="u-nav" id="navBacktest" data-route="backtest"><span class="u-ic" data-ic="backtest" aria-hidden="true">◎</span>研究紀錄</button>
+      <button class="u-nav" id="navLab" data-route="lab"><span class="u-ic" data-ic="lab" aria-hidden="true">◇</span>因子研究</button>
+      <!-- 預測追蹤(review)與模擬投資組合(paper)暫停顯示:目前用內建模型的評等,下一版重接到使用者模型(程式碼保留) -->
+      <h2>工具</h2>
+      <button class="u-nav" id="navMethod" data-route="method"><span class="u-ic" data-ic="method" aria-hidden="true">ⓘ</span>方法與資料</button>
+      <div class="app-side-foot">
+        <button class="u-nav" id="navTheme" hidden title="切換外觀"><span class="u-ic" data-ic="theme" aria-hidden="true">◑</span><span id="navThemeTxt">外觀:跟系統</span></button>
+        <button class="u-nav" id="navLang" hidden title="切換語言"><span class="u-ic" data-ic="globe" aria-hidden="true">文</span><span id="navLangTxt">English</span></button>
+        <button class="u-nav" id="navColor" hidden title="切換漲跌配色"><span class="u-ic" data-ic="colors" aria-hidden="true">◐</span><span id="navColorTxt">漲跌配色:紅漲綠跌</span></button>
+        <div class="sys app-sys" id="sys" title="資料服務狀態"><span class="live-dot"></span><span id="sysTxt">資料服務正常</span></div>
+      </div>
+    </nav>
+    <div class="u-main">
+      <header class="u-toolbar">
+        <span class="app-navbtns"><button class="app-icbtn" id="navBack" aria-label="上一頁" title="上一頁"><span data-ic="back" aria-hidden="true">‹</span></button><button class="app-icbtn" id="navFwd" aria-label="下一頁" title="下一頁"><span data-ic="forward" aria-hidden="true">›</span></button></span>
+        <span class="u-title" id="tbTitle">首頁</span>
+        <span class="u-sp"></span>
+        <span class="app-clock" id="mkClock" aria-label="市場開盤狀態"></span>
+        <div class="search" id="topSearch">
+          <span class="icon" data-ic="search" aria-hidden="true">⌕</span>
+          <kbd class="app-kbd" aria-hidden="true">/</kbd>
+          <input id="q" type="text" autocomplete="off" spellcheck="false" aria-label="搜尋公司" placeholder="搜尋公司或代號">
+          <div class="dropdown" id="dd"></div>
+        </div>
+        <button class="app-cmdk" id="cmdK" title="指令面板:找公司、跳頁、執行動作" aria-label="開啟指令面板">⌘K</button>
+      </header>
+      <main id="app" class="u-content"></main>
+  <!-- 全站「非投資建議」聲明的靜態備援:JS 載入失敗也看得到;app.js 會沿用這個元素(同一個 id),不會出現兩份 -->
+  <footer id="siteDisclaimer" class="site-disclaimer" role="contentinfo">H0 Lab 是開源的研究工具,不是證券投資顧問。所有分數、等級與回測結果都是模型輸出,不構成投資建議,也不保證任何報酬;資料可能有誤。</footer>
+    </div>
+    <nav class="u-tabbar" aria-label="主要導覽">
+      <button class="u-tab" data-route=""><span class="u-ic" aria-hidden="true">◉</span>首頁</button>
+      <button class="u-tab" data-route="scan"><span class="u-ic" aria-hidden="true">≡</span>掃描</button>
+      <button class="u-tab" data-route="wizard"><span class="u-ic" aria-hidden="true">✦</span>建模型</button>
+      <button class="u-tab" id="tabMore"><span class="u-ic" aria-hidden="true">⋯</span>更多</button>
+    </nav>
+  </div>
+  <div class="tip" id="tip"></div>
+  <script src="/static/vendor/echarts-5.6.0.min.js"></script>
+  <script type="module" src="/static/js/app.js"></script>
+  <script type="module" src="/static/js/update.js"></script>
+</body>
+</html>

@@ -1,0 +1,17 @@
+H0 Lab
+Copyright 2026 JWcod
+
+This product is distributed under the Apache License 2.0. See LICENSE.
+
+This product includes Apache ECharts (https://echarts.apache.org/), developed
+at The Apache Software Foundation, under the Apache License 2.0. See
+web/vendor/ECHARTS_LICENSE.txt.
+
+Other third-party components and their licenses are listed in
+THIRD_PARTY_LICENSES.md.
+
+The license above covers this project's code and documents only. It does not
+cover market data or other content obtained from third parties, which remain
+subject to each provider's terms (see DATA_SOURCES.md). The name "H0 Lab" and
+its logo are not licensed. If you distribute a fork, please give it a different
+name and icon.

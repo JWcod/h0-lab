@@ -1,0 +1,96 @@
+{
+  "version": "JW-MF v1.1",
+  "updated": "2026-10-15",
+  "note": "所有權重與門檻都是 v1 假設,依復盤結果調整;改動請同步更新 docs/模型白皮書.md 修改紀錄",
+  "pillar_weights": {
+    "long_term": {
+      "quality": 25,
+      "valuation": 25,
+      "growth": 20,
+      "health": 15,
+      "revisions": 10,
+      "flows": 5
+    },
+    "short_term_us": {
+      "momentum": 35,
+      "revisions": 25,
+      "flows": 15,
+      "sentiment": 10,
+      "valuation": 5,
+      "regime": 10
+    },
+    "short_term_tw": {
+      "momentum": 30,
+      "revisions": 20,
+      "flows": 30,
+      "sentiment": 5,
+      "valuation": 5,
+      "regime": 10
+    }
+  },
+  "short_term_thresholds": {
+    "bullish": 62,
+    "bearish": 42
+  },
+  "valuation": {
+    "erp_mature": 0.042,
+    "tw_rf": 0.016,
+    "tw_erp": 0.06,
+    "tw_erp_note": "台股總股權風險溢酬(含國家風險)。成熟市場 4.2% + 國家風險約 0.8% 會讓台股折現率過低(台幣利率只有 1.6%),v1 用約 6%。刻意不跟著市場隱含 ERP 浮動:市場過熱時隱含 ERP 會變很低,跟著調就會把高估合理化",
+    "coe_floor_tw": 0.065,
+    "coe_floor_us": 0.07,
+    "us_rf_fallback": 0.042,
+    "terminal_growth_us": 0.03,
+    "terminal_growth_tw": 0.015,
+    "wacc_floor": 0.06,
+    "wacc_floor_tw": 0.06,
+    "wacc_cap": 0.14,
+    "forecast_years": 10,
+    "start_growth_cap": 0.4,
+    "start_growth_floor": -0.1,
+    "mc_draws": 5000,
+    "analyst_optimism_haircut": 0.1,
+    "margin_of_safety": {
+      "低": 0.15,
+      "中": 0.25,
+      "高": 0.35,
+      "很高": 0.45
+    },
+    "terminal_growth_note": "永續成長率不高於無風險利率(Damodaran 一致性原則):台幣 rf 1.6% → 1.5%;美元 rf 5.2% → 3%"
+  },
+  "method_weights": {
+    "mature": {
+      "dcf": 35,
+      "pe_band": 20,
+      "peers": 15,
+      "analyst": 30,
+      "epv": 0
+    },
+    "growth": {
+      "dcf": 30,
+      "pe_band": 15,
+      "peers": 20,
+      "analyst": 35,
+      "epv": 0
+    },
+    "unprofitable": {
+      "dcf": 15,
+      "pe_band": 0,
+      "peers": 35,
+      "analyst": 50,
+      "epv": 0
+    },
+    "financial": {
+      "pb_roe": 40,
+      "pe_band": 25,
+      "peers": 10,
+      "analyst": 25
+    }
+  },
+  "method_weights_note": "EPV 是零成長價值,只當「下檔參考」顯示;只有景氣循環股(用整個循環的利潤率)才納入加權(權重 15),同業權重減半",
+  "decision_rules": {
+    "qvm_sell_guard": true,
+    "us_valuation_only_sell": false,
+    "note": "v1.1(2026-10-15)依 5 年 point-in-time 回測加入:①品質 ≥70 且動能 ≥60 的公司不因估值偏貴而建議賣出;②美股不發「只因估值偏貴」的賣出(有財務紅旗才賣)"
+  }
+}

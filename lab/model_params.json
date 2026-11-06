@@ -1,0 +1,100 @@
+{
+  "version": "JW-MF v2.0-dev",
+  "cross_sectional_scoring": false,
+  "cross_sectional_scoring_note": "P2-H05(v2 階段 2):回測的長期分數改用每個指標在當日股票池的橫斷面百分位。add 閘門(lt_12m,71ffd7e8d5d7719b)不通過:差異 −0.006(95% 區間 −0.013 ~ +0.001),兩市與兩個子期間都偏負,沒有證實有效 → 關閉、程式保留",
+  "tw_industry_neutral_valuation": false,
+  "tw_industry_neutral_valuation_note": "P2-H11(v2 階段 2):台股估值倍數(fcf_yield、ev_ebitda)改用當日股票池百分位,同產業 ≥ 8 檔時用產業內百分位。add 閘門(lt_12m,台股 PIT 50,827042d94cb316fd)不通過:差異 −0.000(−0.003 ~ +0.003),沒有證實有效 → 關閉、程式保留",
+  "tw_chips_history": false,
+  "tw_chips_history_note": "P2-H07(v2 階段 2):台股回測的籌碼面向改用 PIT 籌碼歷史(資料 v2.2)。add 閘門(st_1m)不通過:PIT 50 差異 +0.010(−0.015 ~ +0.035,29102d80601c869f)、網站 40 −0.001(a7226775f886bb48),沒有證實有效 → 關閉、程式與資料保留",
+  "tw_st_drop_momentum": false,
+  "tw_st_drop_momentum_note": "P3-H01(預先登記 §7,v2 階段 5):台股短期分數的技術動能權重設 0,其他依原比例放大(可調參數 0)。看過開發集才登記,只能用階段 5 最終 holdout 檢驗;檢驗通過前維持關閉,網站與回測行為不變",
+  "us_quarterly_ttm": false,
+  "us_quarterly_ttm_note": "P2-H08(v2 階段 2):美股回測在最新季報比最新年報新時,改用近四季 TTM。閘門(fix,lt_6m,c662549a396a8bec)不通過:差異 −0.009,95% 下界 −0.027 < −0.02(可能更差),依預先登記 §4 第 5 點不合併、關閉,待維護者決定",
+  "validated_pillars": [
+    "quality",
+    "valuation",
+    "growth",
+    "health",
+    "momentum",
+    "regime"
+  ],
+  "validated_pillars_note": "Q2(專案決定 2026-10-16;v2 階段 3 實作):網站評等只用有歷史回測的面向(回測只有這幾個面向的資料)。預期修正、籌碼、新聞情緒照樣計算、顯示在細節層並標「參考」,不進長期 / 短期評等。回測本來就沒有這些面向,結果不變;**模擬帳戶會變**:策略 A 的短期條件與候選排序改用過濾後的短期分數",
+  "us_ratings": false,
+  "us_ratings_note": "Q7(專案決定 2026-10-16;v2 階段 3 實作):美股在證實之前網站不給評等,只顯示資訊。恢復門檻:長期分數重疊世代月 IC 的 HAC 95% 下界 > 0,且 holdout 方向一致。模型內部評等仍存在 verdict.long_term_model,供掃描、模擬帳戶與前瞻快照(模擬帳戶行為在階段 4 之前不改)",
+  "updated": "2026-10-15",
+  "note": "所有權重與門檻都是 v1 假設,依復盤結果調整;改動請同步更新 docs/模型白皮書.md 修改紀錄",
+  "default_model": "jw-mf-2.0",
+  "default_model_note": "M1(2026-11-02):面向權重 pillar_weights 與短期門檻 short_term_thresholds 搬到出廠模型檔 lab/models/jw-mf-2.0.json;load_params() 會依原本位置填回。舊式參數檔(內含 pillar_weights,例如凍結資料夾與 tests/baseline)照舊使用檔內的值",
+  "valuation": {
+    "erp_mature": 0.042,
+    "tw_rf": 0.016,
+    "tw_erp": 0.06,
+    "tw_erp_note": "台股總股權風險溢酬(含國家風險)。成熟市場 4.2% + 國家風險約 0.8% 會讓台股折現率過低(台幣利率只有 1.6%),v1 用約 6%。刻意不跟著市場隱含 ERP 浮動:市場過熱時隱含 ERP 會變很低,跟著調就會把高估合理化",
+    "coe_floor_tw": 0.065,
+    "coe_floor_us": 0.07,
+    "us_rf_fallback": 0.042,
+    "terminal_growth_us": 0.03,
+    "terminal_growth_tw": 0.015,
+    "wacc_floor": 0.06,
+    "wacc_floor_tw": 0.06,
+    "wacc_cap": 0.14,
+    "forecast_years": 10,
+    "start_growth_cap": 0.4,
+    "start_growth_floor": -0.1,
+    "mc_draws": 5000,
+    "single_method_very_high": true,
+    "rates_asof": true,
+    "rates_asof_note": "P2-H01(v2 階段 2):台灣 rf = 判斷日當時已公布的央行 10 年期公債年平均;ERP = Damodaran 當時版本(台灣總 ERP、成熟市場 ERP);永續成長 = min(參數, rf)。資料在總經 PIT store 的 RATES(lab/sources/macro_rates.py)",
+    "single_method_note": "P2-H03(v2 階段 2):有效估值方法只剩 1 種時不確定性一律「很高」",
+    "analyst_optimism_haircut": 0.1,
+    "margin_of_safety": {
+      "低": 0.15,
+      "中": 0.25,
+      "高": 0.35,
+      "很高": 0.45
+    },
+    "terminal_growth_note": "永續成長率不高於無風險利率(Damodaran 一致性原則):台幣 rf 1.6% → 1.5%;美元 rf 5.2% → 3%"
+  },
+  "method_weights": {
+    "mature": {
+      "dcf": 35,
+      "pe_band": 20,
+      "peers": 15,
+      "analyst": 30,
+      "epv": 0
+    },
+    "growth": {
+      "dcf": 30,
+      "pe_band": 15,
+      "peers": 20,
+      "analyst": 35,
+      "epv": 0
+    },
+    "unprofitable": {
+      "dcf": 15,
+      "pe_band": 0,
+      "peers": 35,
+      "analyst": 50,
+      "epv": 0
+    },
+    "financial": {
+      "pb_roe": 40,
+      "pe_band": 25,
+      "peers": 10,
+      "analyst": 25
+    }
+  },
+  "method_weights_note": "EPV 是零成長價值,只當「下檔參考」顯示;只有景氣循環股(用整個循環的利潤率)才納入加權(權重 15),同業權重減半",
+  "decision_rules": {
+    "fixed_quantile_levels": [
+      0.1,
+      0.3,
+      0.7,
+      0.9
+    ],
+    "fixed_quantile_note": "P2-H10(v2 階段 2):回測評等改用每日股票池內長期分數的固定分位(後 10% 賣出、次 20% 減碼、中 40% 持有、次 20% 買進、前 10% 強力買進),取代估值區間與 v1.1 兩條規則;沒有公平價的列維持不評等",
+    "qvm_sell_guard": true,
+    "us_valuation_only_sell": false,
+    "note": "v1.1(2026-10-15)依 5 年 point-in-time 回測加入:①品質 ≥70 且動能 ≥60 的公司不因估值偏貴而建議賣出;②美股不發「只因估值偏貴」的賣出(有財務紅旗才賣)"
+  }
+}

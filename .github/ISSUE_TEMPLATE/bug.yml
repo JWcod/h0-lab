@@ -1,0 +1,42 @@
+name: Bug report / 回報問題
+description: Something does not work as expected. 有東西不正常。
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        H0 Lab is a research tool and does not give investment advice. Do not paste `.env`, tokens, your watchlist, or notes.
+        H0 Lab 是研究工具,不提供投資建議。請不要貼 `.env`、token、觀察清單或筆記。
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened / 發生什麼事
+      description: What you expected, and what happened instead. 你預期什麼、實際發生什麼。
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce / 重現步驟
+      placeholder: "1. Open ... 2. Search ... 3. See ..."
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: H0 Lab version / 版本
+      description: App version, or the commit if running from source. App 版本,或原始碼的 commit。
+    validations:
+      required: true
+  - type: input
+    id: macos
+    attributes:
+      label: macOS version / macOS 版本
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs or screenshots / 記錄或截圖
+      description: Remove personal details first. 請先移除個人資訊。
+      render: text

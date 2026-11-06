@@ -1,0 +1,26 @@
+name: Feature idea / 功能想法
+description: Suggest an improvement. 提出改進建議。
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **Not accepted:** broker connections, order placement, paid APIs, stock recommendations, telemetry. See CONTRIBUTING.md. All decisions are the maintainer's.
+        **不接受:** 券商連接、下單、付費 API、個股推薦、遙測。詳見 CONTRIBUTING.md。一律由維護者決定。
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve / 解決什麼問題
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: Your idea / 你的想法
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence, for model ideas / 模型想法的證據
+      description: Model changes need pre-registration and the merge gate. Link to the source or data behind the idea. 模型改動要預先登記並通過閘門,請附來源。

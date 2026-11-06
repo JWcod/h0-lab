@@ -1,0 +1,34 @@
+name: Data problem / 資料問題
+description: Wrong numbers, or a source that stopped working. 數字錯誤或來源失效。
+labels: [data]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please describe the problem without pasting large amounts of provider data. Issues cannot request paid sources or ways around a provider's limits.
+        請描述問題,不要貼大量來源資料。不接受付費來源或規避來源限制的請求。
+  - type: input
+    id: source
+    attributes:
+      label: Source / 來源
+      placeholder: Yahoo, FinMind, SEC, TWSE, TPEx, TDCC, Google News
+    validations:
+      required: true
+  - type: input
+    id: symbol
+    attributes:
+      label: Ticker and date / 代號與日期
+      placeholder: 2330, 2026-10-01
+  - type: textarea
+    id: what
+    attributes:
+      label: What is wrong / 哪裡不對
+      description: The value shown, the value you expected, and where the correct value is published. 顯示的值、預期的值、正確值的公開出處。
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: H0 Lab version / 版本
+    validations:
+      required: true

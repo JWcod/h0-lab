@@ -1,0 +1,82 @@
+{
+ "vintage": "v1.1_2026-10-15",
+ "git_head_at_freeze": "7a9fca024ab4df26fdac5dfd0858a8cc951f3463",
+ "namespaces": {
+  "bt_px": {
+   "files": 3,
+   "sha256": "241a8dd8ff1ea0e89d5b47a80db7aea1af1c293525695673dff5cde3e60f0351"
+  },
+  "finmind": {
+   "files": 450,
+   "sha256": "5bf30b7baece5c3dd95ba1e7ca845bd6e9cddaa2c27cb07528dbe03f264e343d"
+  },
+  "gnews": {
+   "files": 126,
+   "sha256": "5ba8a522cae0709ce71484c907ddf91a7febe8685c137de916bb813c9201b0f9"
+  },
+  "mops": {
+   "files": 1,
+   "sha256": "f962230a5417af8e46f814134a1e1e5d4eb6b0ff18394a0b009205a2301d2a61"
+  },
+  "research_factors": {
+   "files": 4,
+   "sha256": "51c5eb7d479cd53fe2619de47280a7721d3544f912575c34829769d77722e703"
+  },
+  "research_px": {
+   "files": 4,
+   "sha256": "b4ec0bbbe90fa64722c0f6be93205486c60083bae9085852cf02809aa4e6b052"
+  },
+  "sec": {
+   "files": 1,
+   "sha256": "8901cef2236246ec1262d8a48e2e6b70e3b26c2d66e22dd78f3074339db522a8"
+  },
+  "sec_facts": {
+   "files": 41,
+   "sha256": "2772b2f370f209dcff783459493079cf5f22737cffc7acbf9b65ceaf5cf865b0"
+  },
+  "sec_sub": {
+   "files": 41,
+   "sha256": "ff0dd485272f2de30ea6733f9a36cf858d62ffd6c81a9a0d95d30b1a09ebc3d0"
+  },
+  "tdcc": {
+   "files": 1,
+   "sha256": "96f8013e897096440c02f6c76fe8a4c1c7005b7209209eb92b96582d9f1251fc"
+  },
+  "twse": {
+   "files": 2,
+   "sha256": "f2439644916201f35a448f47fd912cfcb20d28cdcc8edcba7a03fecd29df0385"
+  },
+  "yahoo": {
+   "files": 2469,
+   "sha256": "f1264bf77f4babc3d9f1302f45ea37c5a54ce62975d01ee512aec5c869a8da5f"
+  },
+  "yahoo_hist": {
+   "files": 84,
+   "sha256": "4c2d21ea5edb060445f7fb8f7a0c1bd3b9ad1e9f5166bfdb0a1914f6d9ddc697"
+  },
+  "yahoo_idx": {
+   "files": 98,
+   "sha256": "251eca32c307946e91601528f867e5a33749186a105a8c7bae51d0e7703c28b7"
+  },
+  "yahoo_ind": {
+   "files": 22,
+   "sha256": "5b2c100c1edae4d04778230d6597627b478e94a4fbfa3620a2a786d426b06208"
+  },
+  "yahoo_news": {
+   "files": 42,
+   "sha256": "d67254dea10599d53e4f4d32d701c7367b08fc39ee029cbcdc17f5508a5e4983"
+  },
+  "yahoo_search": {
+   "files": 2,
+   "sha256": "aeab814d2053189fbf28a6d5bf50ac9c0ced3cddc50916c61f50e6f3e42a889b"
+  },
+  "yahoo_sec": {
+   "files": 3,
+   "sha256": "f4cab2e47c0300462b0a768260407fa3a446fdc5722f5362e338f3b1a62e4a28"
+  }
+ },
+ "rows_csv_sha256": {
+  "TW": "2bebfc24ca873fcd307989da34a8ed86710a6d2eb82a7ab6170f5368ce8d175b",
+  "US": "caf072360cb55cc287c62ae9ff644c0f493cbddc742808459672cb55e6b5f017"
+ }
+}

@@ -1,0 +1,21 @@
+# Virtual environment and caches
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+# Downloaded data never goes into git (see DATA_SOURCES.md)
+data/
+# Your watchlists, notes, models and paper accounts
+private/
+# Keys and tokens
+.env
+.env.*
+!.env.example
+# Local scratch and build output
+scratch/
+build/
+dist/
+.DS_Store
+.worktrees/
+.agent_out/

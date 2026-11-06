@@ -1,0 +1,76 @@
+/* 指令面板(js/palette.js)、快捷鍵表(js/shortcuts.js)、提示訊息(js/toast.js)。
+   - 只用 tokens.css 的變數,淺色模式自動跟著換;不寫死色碼。
+   - 規則 7:文字只用 --text / --text2,不用透明度淡化(淡入動畫只動整個面板,結束時完全不透明)。
+   - 毛玻璃:--overlay-glass(幾乎不透明,文字才讀得清楚)+ backdrop-filter;prefers-reduced-motion 時不做動畫。 */
+
+.h0-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.h0-pl-lock { overflow: hidden; }
+
+.h0-kbd { display: inline-block; min-width: 20px; padding: 1px 6px; border: 1px solid var(--sep); border-bottom-width: 2px; border-radius: 5px;
+  background: var(--surface2); color: var(--text); font: 600 11.5px/1.5 var(--mono); text-align: center; }
+
+/* ---------- 指令面板 ---------- */
+.h0-pl-scrim { position: fixed; inset: 0; z-index: 1000; display: flex; justify-content: center; align-items: flex-start; padding: 14vh 16px 16px;
+  background: var(--scrim); }
+.h0-pl-scrim[hidden] { display: none; }
+.h0-pl { width: min(640px, 100%); max-height: min(560px, 72vh); display: flex; flex-direction: column; overflow: hidden;
+  background: var(--overlay-glass); -webkit-backdrop-filter: blur(24px) saturate(1.6); backdrop-filter: blur(24px) saturate(1.6);
+  border: 1px solid var(--sep); border-radius: var(--r-card); box-shadow: var(--glow-brand), var(--shadow); color: var(--text); font-family: var(--font);
+  animation: h0-pl-in .18s var(--ease); }
+.h0-pl-head { display: flex; align-items: center; gap: 10px; padding: 14px 16px; border-bottom: 1px solid var(--sep); }
+.h0-pl-ic { color: var(--blue); font-size: 20px; line-height: 1; }
+.h0-pl-input { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; color: var(--text); font: 500 17px var(--font); }
+.h0-pl-input::placeholder { color: var(--text2); }
+.h0-pl-list { flex: 1; overflow-y: auto; padding: 6px 8px 8px; overscroll-behavior: contain; }
+.h0-pl-gh { padding: 10px 10px 4px; color: var(--text2); font: 600 11.5px var(--font); letter-spacing: .06em; }
+.h0-pl-opt { display: flex; align-items: center; gap: 10px; min-height: 40px; padding: 7px 10px; border-radius: var(--r-ctl); cursor: pointer; color: var(--text); }
+.h0-pl-opt.is-active { background: var(--sel-soft); box-shadow: inset 2px 0 0 var(--blue); }
+.h0-pl-sym { min-width: 64px; color: var(--link); font: 600 13px var(--mono); font-variant-numeric: tabular-nums; }
+.h0-pl-label { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--fs-body); }
+.h0-pl-hint { color: var(--text2); font-size: var(--fs-small); white-space: nowrap; }
+.h0-pl-keys { display: inline-flex; gap: 3px; }
+.h0-pl-empty { padding: 28px 12px; text-align: center; color: var(--text2); font-size: var(--fs-body); }
+.h0-pl-foot { display: flex; gap: 16px; padding: 9px 16px; border-top: 1px solid var(--sep); color: var(--text2); font-size: 12px; }
+.h0-pl-tip .h0-kbd { margin-right: 2px; }
+
+/* 快捷鍵表(沿用面板外觀) */
+.h0-keys-list { padding: 4px 16px 14px; overflow-y: auto; }
+.h0-keys-list h3 { margin: 12px 0 6px; color: var(--text2); font: 600 11.5px var(--font); letter-spacing: .06em; }
+.h0-keys-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 6px 0; border-bottom: 1px solid var(--sep); color: var(--text); font-size: var(--fs-body); }
+.h0-keys-row:last-child { border-bottom: 0; }
+.h0-keys-row.is-btn { width: 100%; border-width: 0 0 1px; border-style: solid; background: transparent; font-family: var(--font); text-align: left; cursor: pointer; border-radius: 0; }
+.h0-keys-row.is-btn:hover, .h0-keys-row.is-btn:focus-visible { background: var(--sel-soft); outline: 0; }
+.h0-keys-k { display: inline-flex; align-items: center; gap: 4px; color: var(--text2); font-size: 12px; }
+.h0-keys-title { flex: 1; margin: 0; color: var(--text); font: 600 var(--fs-body) var(--font); }
+.h0-keys-x { border: 0; background: var(--surface2); color: var(--text); width: 28px; height: 28px; border-radius: 50%; font-size: 16px; line-height: 1; cursor: pointer; }
+.h0-keys-x:focus-visible { outline: 0; box-shadow: var(--focus); }
+
+/* ---------- 提示訊息 ---------- */
+.h0-toasts { position: fixed; right: 20px; bottom: 20px; z-index: 1100; display: flex; flex-direction: column; align-items: flex-end; gap: 8px;
+  max-width: min(420px, calc(100vw - 32px)); pointer-events: none; }
+.h0-toast { display: flex; align-items: center; gap: 10px; min-width: 260px; padding: 10px 10px 10px 14px; pointer-events: auto;
+  background: var(--overlay-glass); -webkit-backdrop-filter: blur(20px) saturate(1.6); backdrop-filter: blur(20px) saturate(1.6);
+  border: 1px solid var(--sep); border-left: 3px solid var(--blue); border-radius: var(--r-ctl); box-shadow: var(--shadow);
+  color: var(--text); font: 500 var(--fs-small)/1.45 var(--font); animation: h0-toast-in .25s var(--ease); }
+.h0-toast.is-ok { border-left-color: var(--green); }
+.h0-toast.is-warn { border-left-color: var(--orange); }
+.h0-toast.is-err { border-left-color: var(--red); }
+.h0-toast-ic { flex: none; width: 18px; text-align: center; font-weight: 700; color: var(--blue); }
+.h0-toast.is-ok .h0-toast-ic { color: var(--green); }
+.h0-toast.is-warn .h0-toast-ic { color: var(--orange); }
+.h0-toast.is-err .h0-toast-ic { color: var(--red); }
+.h0-toast-msg { flex: 1; min-width: 0; }
+.h0-toast-act { flex: none; border: 0; border-radius: 6px; padding: 4px 10px; background: var(--sel); color: var(--on-accent); font: 600 12.5px var(--font); cursor: pointer; }
+.h0-toast-x { flex: none; border: 0; background: transparent; color: var(--text); width: 24px; height: 24px; border-radius: 6px; font-size: 16px; line-height: 1; cursor: pointer; }
+.h0-toast-x:hover { background: var(--surface2); }
+.h0-toast-act:focus-visible, .h0-toast-x:focus-visible { outline: 0; box-shadow: var(--focus); }
+.h0-toast.is-out { animation: h0-toast-out .2s var(--ease) forwards; }
+
+@keyframes h0-pl-in { from { opacity: 0; transform: translateY(-8px) scale(.98); } to { transform: none; } }
+@keyframes h0-toast-in { from { opacity: 0; transform: translateY(10px); } to { transform: none; } }
+@keyframes h0-toast-out { to { opacity: 0; transform: translateX(16px); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .h0-pl, .h0-toast { animation: none; }
+  .h0-toast.is-out { animation: none; display: none; }
+}

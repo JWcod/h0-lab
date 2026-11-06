@@ -1,0 +1,71 @@
+/* 更新橫幅與本機設定(web/js/update.js)。沿用設計 token;文字不用灰色,深淺色都維持高對比。 */
+.h0u-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; padding: 8px 16px; background: var(--surface2);
+  border-bottom: 1px solid var(--blue); color: var(--text); font-size: 13px; }
+.h0u-msg { font-weight: 600; color: var(--text); }
+.h0u-note { font-size: 12px; color: var(--text); margin: 4px 0; }
+.h0u-acts { display: inline-flex; flex-wrap: wrap; gap: 6px; margin-left: auto; }
+.h0u-detail { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; }
+.h0u-cmd { font-size: 12px; padding: 2px 6px; border-radius: 6px; background: var(--surface); color: var(--text); user-select: all; }
+.h0u-prog { width: 180px; height: 8px; accent-color: var(--blue); }
+.h0u-dlg { max-width: 560px; width: calc(100vw - 48px); border: 1px solid var(--blue); border-radius: 12px; padding: 18px 20px;
+  background: var(--surface); color: var(--text); }
+.h0u-dlg::backdrop { background: rgba(0, 0, 0, .55); }
+.h0u-dlg h2 { margin: 0 0 8px; font-size: 16px; color: var(--text); }
+.h0u-dlg p { color: var(--text); }
+.h0u-dlg .h0u-acts { margin-top: 12px; justify-content: flex-end; display: flex; }
+.h0u-notes { max-height: 50vh; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; font: inherit; font-size: 13px;
+  padding: 10px; border-radius: 8px; background: var(--surface2); color: var(--text); }
+.h0u-field { display: block; margin-top: 12px; font-weight: 600; font-size: 13px; color: var(--text); }
+.h0u-check { display: flex; gap: 8px; align-items: flex-start; font-size: 13px; color: var(--text); }
+.h0u-dlg input[type="text"], .h0u-dlg input[type="password"] { width: 100%; box-sizing: border-box; margin-top: 4px; padding: 6px 8px;
+  border-radius: 8px; border: 1px solid var(--blue); background: var(--surface2); color: var(--text); font-size: 13px; }
+
+/* 設定視窗:左側分頁 + 右側內容。文字一律 --text / --text2,不用灰色 */
+.u-nav[hidden] { display: none; }
+.h0s-dlg { width: min(780px, calc(100vw - 48px)); height: min(560px, calc(100vh - 48px)); max-width: none; padding: 0; overflow: hidden; border: 1px solid var(--sep);
+  border-radius: 14px; background: var(--surface); color: var(--text); }
+.h0s-dlg[open] { display: flex; flex-direction: column; }
+.h0s-dlg::backdrop { background: rgba(0, 0, 0, .55); }
+.h0s-head { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px 12px 20px; border-bottom: 1px solid var(--sep); }
+.h0s-head h2 { margin: 0; font-size: 16px; color: var(--text); }
+.h0s-x { width: 44px; height: 44px; margin: -6px -6px -6px 0; border: 0; border-radius: 8px; background: none; color: var(--text); font-size: 22px; line-height: 1; cursor: pointer; }
+.h0s-x:hover { background: var(--surface2); }
+.h0s-body { display: flex; flex: 1; min-height: 0; }
+.h0s-rail { flex: 0 0 168px; display: flex; flex-direction: column; gap: 2px; padding: 12px 8px; border-right: 1px solid var(--sep); }
+.h0s-tab { min-height: 40px; padding: 8px 12px; border: 0; border-radius: 8px; background: none; color: var(--text); font: inherit; font-size: 14px; text-align: left; cursor: pointer; }
+.h0s-tab:hover { background: var(--surface2); }
+.h0s-tab[aria-selected="true"] { background: var(--surface2); box-shadow: inset 3px 0 0 var(--blue); font-weight: 600; }
+.h0s-main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.h0s-heading { margin: 0; padding: 16px 20px 4px; font-size: 18px; color: var(--text); }
+.h0s-pane { flex: 1; overflow-y: auto; padding: 8px 20px 20px; font-size: 14px; color: var(--text); }
+.h0s-pane:focus-visible { outline: 2px solid var(--blue); outline-offset: -2px; }
+.h0s-pane p, .h0s-pane li, .h0s-pane td, .h0s-pane th, .h0s-pane dt, .h0s-pane dd { color: var(--text); }
+.h0s-pane h3 { margin: 20px 0 8px; font-size: 14px; color: var(--text); }
+.h0s-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 12px 0; border-bottom: 1px solid var(--sep); }
+.h0s-label { font-weight: 600; min-width: 0; }
+.h0s-ctl { flex: none; }
+.h0s-note, .h0s-pane p.h0s-note { margin: 4px 0 0; font-size: 12px; font-weight: 400; color: var(--text2); }
+.h0s-lead { margin: 8px 0; font-weight: 600; }
+.h0s-mono { font-family: var(--mono, ui-monospace, Menlo, monospace); font-size: 12px; overflow-wrap: anywhere; user-select: text; }
+.h0s-seg { display: inline-flex; padding: 2px; border-radius: 8px; background: var(--surface2); }
+.h0s-seg-btn { min-height: 32px; padding: 4px 12px; border: 0; border-radius: 6px; background: none; color: var(--text); font: inherit; font-size: 13px; cursor: pointer; }
+.h0s-seg-btn[aria-pressed="true"] { background: var(--sel); color: var(--on-accent); font-weight: 600; }
+.h0s-list { display: flex; flex-direction: column; border: 1px solid var(--sep); border-radius: 8px; overflow: hidden; }
+.h0s-item { display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 8px 12px; cursor: pointer; }
+.h0s-item + .h0s-item { border-top: 1px solid var(--sep); }
+.h0s-item:hover { background: var(--surface2); }
+.h0s-item-name { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.h0s-acts { margin: 14px 0 0; justify-content: flex-start; display: flex; }
+.h0s-form input[type="text"], .h0s-form input[type="password"] { width: 100%; box-sizing: border-box; margin-top: 4px; padding: 8px 10px; border-radius: 8px;
+  border: 1px solid var(--text2); background: var(--surface2); color: var(--text); font-size: 13px; }
+.h0s-form input::placeholder { color: var(--text2); opacity: 1; font-style: italic; }
+.h0s-form input:focus { outline: 2px solid var(--blue); outline-offset: 1px; }
+.h0s-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.h0s-table th { text-align: left; font-weight: 600; }
+.h0s-table th, .h0s-table td { padding: 8px 8px 8px 0; border-bottom: 1px solid var(--sep); vertical-align: top; }
+.h0s-points { margin: 8px 0 0; padding-left: 18px; }
+.h0s-points li { margin: 6px 0; line-height: 1.5; }
+.h0s-folders { margin: 0; }
+.h0s-folders dt { margin-top: 10px; font-weight: 600; font-size: 13px; }
+.h0s-folders dd { margin: 2px 0 0; }
+button[hidden] { display: none; }

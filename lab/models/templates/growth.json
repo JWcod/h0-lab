@@ -1,0 +1,1553 @@
+{
+ "schema": "h0-model/1",
+ "id": "template-growth",
+ "family_id": "template-growth",
+ "name": "成長(範本)",
+ "based_on": "jw-mf-2.0@84220996991ad8b6",
+ "created": "2026-11-02",
+ "notes": "範本是起點,沒有證實有效。權重在 2026-11-02 依文獻與常識事先決定,寫進範本後才准跑回測;不得看回測結果回頭調。",
+ "template": {
+  "id": "growth",
+  "order": 4,
+  "markets": [
+   "TW",
+   "US"
+  ],
+  "title": {
+   "zh-TW": "成長"
+  },
+  "for_whom": {
+   "zh-TW": "追營收、獲利成長的人"
+  },
+  "focus": {
+   "zh-TW": "成長為主(台股含月營收)、品質次之"
+  },
+  "ignores": {
+   "zh-TW": "估值降低、不看短期漲跌"
+  },
+  "rationale": {
+   "zh-TW": "營收與獲利持續成長是股價長期上漲的來源;台股每月公布營收,月營收年增與創新高是常用的高頻成長訊號。但 Lakonishok 等人發現市場常過度外推過去的高成長(成長股平均報酬反而較低),所以品質次之、估值與財務安全各留一點當煞車。注意:分析師預估成長在回測裡沒有資料。"
+  },
+  "sources": [
+   "Lakonishok, Shleifer & Vishny (1994), Contrarian Investment, Extrapolation, and Risk, Journal of Finance(對照:成長股的外推風險)",
+   "Chan, Jegadeesh & Lakonishok (1996), Momentum Strategies, Journal of Finance(盈餘動能)",
+   "顧廣平等台灣月營收實證研究(本專案指標字典「月營收動能」的出處)"
+  ],
+  "requires_vars": []
+ },
+ "pillar_weights": {
+  "long_term": {
+   "quality": 25,
+   "valuation": 10,
+   "growth": 55,
+   "health": 10,
+   "momentum": 0,
+   "revisions": 0,
+   "flows": 0
+  },
+  "short_term_us": {
+   "momentum": 35,
+   "revisions": 25,
+   "flows": 15,
+   "sentiment": 10,
+   "valuation": 5,
+   "regime": 10
+  },
+  "short_term_tw": {
+   "momentum": 30,
+   "revisions": 20,
+   "flows": 30,
+   "sentiment": 5,
+   "valuation": 5,
+   "regime": 10
+  }
+ },
+ "short_term_thresholds": {
+  "bullish": 62,
+  "bearish": 42
+ },
+ "metrics": [
+  {
+   "key": "roic",
+   "pillar": "quality",
+   "applies": "non_financial",
+   "market": "all",
+   "label": "ROIC 投入資本報酬率",
+   "value": {
+    "var": "roic"
+   },
+   "score": {
+    "type": "linear",
+    "bad": 0.0,
+    "good": 0.25
+   },
+   "weight": 3,
+   "fmt": "pct",
+   "note": "NOPAT ÷ (股東權益 + 負債 − 現金)。持續 > 15% 通常代表有護城河",
+   "peer_blend": null,
+   "requires": null,
+   "gate": null,
+   "enabled": true
+  },
+  {
+   "key": "roe",
+   "pillar": "quality",
+   "applies": "non_financial",
+   "market": "all",
+   "label": "ROE 股東權益報酬率",
+   "value": {
+    "var": "roe"
+   },
+   "score": {
+    "type": "linear",
+    "bad": 0.0,
+    "good": 0.25
+   },
+   "weight": 2,
+   "fmt": "pct",
+   "note": "",
+   "peer_blend": {
+    "peer_var": "peer_pct_roe",
+    "abs_weight": 0.6,
+    "higher_better": true
+   },
+   "requires": null,
+   "gate": null,
+   "enabled": true
+  },
+  {
+   "key": "gp_assets",
+   "pillar": "quality",
+   "applies": "non_financial",
+   "market": "all",
+   "label": "毛利 ÷ 總資產",
+   "value": {
+    "var": "gp_assets"
+   },
+   "score": {
+    "type": "linear",
+    "bad": 0.05,
+    "good": 0.45
+   },
+   "weight": 2,
+   "fmt": "pct",
+   "note": "Novy-Marx (2013):預測力與淨值市價比相當",
+   "peer_blend": null,
+   "requires": null,
+   "gate": null,
+   "enabled": true
+  },
+  {
+   "key": "gross_margin",
+   "pillar": "quality",
+   "applies": "non_financial",
+   "market": "all",
+   "label": "毛利率",
+   "value": {
+    "var": "gross_margin"
+   },
+   "score": {
+    "type": "linear",
+    "bad": 0.15,
+    "good": 0.6
+   },
+   "weight": 1.5,
+   "fmt": "pct",
+   "note": "",
+   "peer_blend": {
+    "peer_var": "peer_pct_gross_margin",
+    "abs_weight": 0.6,
+    "higher_better": true
+   },
+   "requires": null,
+   "gate": null,
+   "enabled": true
+  },
+  {
+   "key": "operating_margin",
+   "pillar": "quality",
+   "applies": "non_financial",
+   "market": "all",
+   "label": "營業利益率",
+   "value": {
+    "var": "operating_margin"
+   },
+   "score": {
+    "type": "linear",
+    "bad": 0.0,
+    "good": 0.3
+   },
+   "weight": 1.5,
+   "fmt": "pct",
+   "note": "",
+   "peer_blend": {
+    "peer_var": "peer_pct_operating_margin",
+    "abs_weight": 0.6,
+    "higher_better": true
+   },
+   "requires": null,
+   "gate": null,
+   "enabled": true
+  },
+  {
+   "key": "gm_std_10y",
+   "pillar": "quality",
+   "applies": "non_financial",
+   "market": "all",
+   "label": "毛利率穩定度(10 年標準差)",
+   "value": {
+    "var": "gm_std_10y"
+   },
+   "score": {
+    "type": "linear",
+    "bad": 0.08,
+    "good": 0.01
+   },
+   "weight": 1,
+   "fmt": "pct",
+   "note": "越低越穩定;QMJ 的 safety 元素",
+   "peer_blend": null,
+   "requires": null,
+   "gate": null,
+   "enabled": true
+  },
+  {
+   "key": "cfo_to_ni",
+   "pillar": "quality",
+   "applies": "non_financial",
+   "market": "all",
+   "label": "營業現金流 ÷ 淨利",
+   "value": {
+    "var": "cfo_to_ni"
+   },
+   "score": {
+    "type": "linear",
+    "bad": 0.6,
+    "good": 1.2
+   },
+   "weight": 1.5,
+   "fmt": "x",
+   "note": "< 0.8 代表獲利沒有變成現金,要注意",
+   "peer_blend": null,
+   "requires": null,
+   "gate": null,
+   "enabled": true
+  },
+  {
+   "key": "accruals",
+   "pillar": "quality",
+   "applies": "non_financial",
+   "market": "all",
+   "label": "應計比率",
+   "value": {
+    "var": "accruals"
+   },
+   "score": {
+    "type": "linear",
+    "bad": 0.1,
+    "good": -0.05
+   },
+   "weight": 1,
+   "fmt": "pct",
+   "note": "Sloan (1996):應計高的公司後續報酬較差",
+   "peer_blend": null,
+   "requires": null,
+   "gate": null,
+   "enabled": true
+  },
+  {
+   "key": "loss_years",
+   "pillar": "quality",
+   "applies": "non_financial",
+   "market": "all",
+   "label": "近 10 年虧損年數",
+   "value": {
+    "var": "loss_years_10y"
+   },
+   "score": {
+    "type": "linear",
+    "bad": 3,
+    "good": 0
+   },
+   "weight": 1,
+   "fmt": "int",
+   "note": "",
+   "peer_blend": null,
+   "requires": null,
+   "gate": null,
+   "enabled": true
+  },
+  {
+   "key": "roe",
+   "pillar": "quality",
+   "applies": "financial",
+   "market": "all",
+   "label": "ROE 股東權益報酬率",
+   "value": {
+    "var": "roe"
+   },
+   "score": {
+    "type": "linear",
+    "bad": 0.04,
+    "good": 0.15
+   },
+   "weight": 3,
+   "fmt": "pct",
+   "note": "",
+   "peer_blend": null,
+   "requires": null,
+   "gate": null,
+   "enabled": true
+  },
+  {
+   "key": "roa",
+   "pillar": "quality",
+   "applies": "financial",
+   "market": "all",
+   "label": "ROA 資產報酬率",
+   "value": {
+    "var": "roa"
+   },
+   "score": {
+    "type": "linear",
+    "bad": 0.003,
+    "good": 0.015
+   },
+   "weight": 2,
+   "fmt": "pct",
+   "note": "",
+   "peer_blend": null,
+   "requires": null,
+   "gate": null,
+   "enabled": true
+  },
+  {
+   "key": "loss_years",
+   "pillar": "quality",
+   "applies": "financial",
+   "market": "all",
+   "label": "近 10 年虧損年數",
+   "value": {
+    "var": "loss_years_10y"
+   },
+   "score": {
+    "type": "linear",
+    "bad": 3,
+    "good": 0
+   },
+   "weight": 1,
+   "fmt": "int",
+   "note": "",
+   "peer_blend": null,
+   "requires": null,
+   "gate": null,
+   "enabled": true
+  },
+  {
+   "key": "revenue_yoy",
+   "pillar": "growth",
+   "applies": "all",
+   "market": "all",
+   "label": "營收年增率({yoy_basis})",
+   "value": {
+    "var": "revenue_yoy"
+   },
+   "score": {
+    "type": "linear",
+    "bad": -0.05,
+    "good": 0.25
+   },
+   "weight": 2,
+   "fmt": "pct",
+   "note": "",
+   "peer_blend": {
+    "peer_var": "peer_pct_revenue_yoy",
+    "abs_weight": 0.6,
+    "higher_better": true
+   },
+   "requires": null,
+   "gate": null,
+   "enabled": true
+  },
+  {
+   "key": "revenue_cagr_3y",
+   "pillar": "growth",
+   "applies": "all",
+   "market": "all",
+   "label": "營收 3 年 CAGR",
+   "value": {
+    "var": "revenue_cagr_3y"
+   },
+   "score": {
+    "type": "linear",
+    "bad": -0.02,
+    "good": 0.2
+   },
+   "weight": 2,
+   "fmt": "pct",
+   "note": "",
+   "peer_blend": null,
+   "requires": null,
+   "gate": null,
+   "enabled": true
+  },
+  {
+   "key": "eps_yoy",
+   "pillar": "growth",
+   "applies": "all",
+   "market": "all",
+   "label": "EPS 年增率",
+   "value": {
+    "var": "eps_yoy"
+   },
+   "score": {
+    "type": "linear",
+    "bad": -0.1,
+    "good": 0.3
+   },
+   "weight": 1.5,
+   "fmt": "pct",
+   "note": "",
+   "peer_blend": null,
+   "requires": null,
+   "gate": null,
+   "enabled": true
+  },
+  {
+   "key": "eps_cagr_3y",
+   "pillar": "growth",
+   "applies": "all",
+   "market": "all",
+   "label": "EPS 3 年 CAGR",
+   "value": {
+    "var": "eps_cagr_eff"
+   },
+   "score": {
+    "type": "linear",
+    "bad": -0.05,
+    "good": 0.25
+   },
+   "weight": 1.5,
+   "fmt": "pct",
+   "note": "",
+   "peer_blend": null,
+   "requires": null,
+   "gate": null,
+   "enabled": true
+  },
+  {
+   "key": "fwd_rev",
+   "pillar": "growth",
+   "applies": "all",
+   "market": "all",
+   "label": "分析師預估營收成長",
+   "value": {
+    "var": "fwd_rev"
+   },
+   "score": {
+    "type": "linear",
+    "bad": 0.0,
+    "good": 0.2
+   },
+   "weight": 1.5,
+   "fmt": "pct",
+   "note": "",
+   "peer_blend": null,
+   "requires": null,
+   "gate": null,
+   "enabled": true
+  },
+  {
+   "key": "fwd_eps",
+   "pillar": "growth",
+   "applies": "all",
+   "market": "all",
+   "label": "分析師預估 EPS 成長",
+   "value": {
+    "var": "fwd_eps"
+   },
+   "score": {
+    "type": "linear",
+    "bad": 0.0,
+    "good": 0.25
+   },
+   "weight": 1.5,
+   "fmt": "pct",
+   "note": "",
+   "peer_blend": null,
+   "requires": null,
+   "gate": null,
+   "enabled": true
+  },
+  {
+   "key": "q_gm_yoy",
+   "pillar": "growth",
+   "applies": "all",
+   "market": "all",
+   "label": "單季毛利率年變化",
+   "value": {
+    "var": "q_gm_change_yoy"
+   },
+   "score": {
+    "type": "linear",
+    "bad": -0.03,
+    "good": 0.03
+   },
+   "weight": 1,
+   "fmt": "pp",
+   "note": "",
+   "peer_blend": null,
+   "requires": null,
+   "gate": null,
+   "enabled": true
+  },
+  {
+   "key": "mr_yoy3",
+   "pillar": "growth",
+   "applies": "all",
+   "market": "all",
+   "label": "月營收近 3 月年增",
+   "value": {
+    "var": "mr_yoy_3m"
+   },
+   "score": {
+    "type": "linear",
+    "bad": -0.05,
+    "good": 0.25
+   },
+   "weight": 2,
+   "fmt": "pct",
+   "note": "台灣實證:營收動能 1–12 個月有正報酬",
+   "peer_blend": null,
+   "requires": "mr_present",
+   "gate": null,
+   "enabled": true
+  },
+  {
+   "key": "mr_record",
+   "pillar": "growth",
+   "applies": "all",
+   "market": "all",
+   "label": "月營收創新高",
+   "value": {
+    "var": "mr_record"
+   },
+   "score": {
+    "type": "builtin",
+    "fn": "mr_record"
+   },
+   "weight": 1,
+   "fmt": "bool",
+   "note": "營收創歷史新高動能(台灣實證有效)",
+   "peer_blend": null,
+   "requires": "mr_present",
+   "gate": null,
+   "enabled": true
+  },
+  {
+   "key": "mr_sur",
+   "pillar": "growth",
+   "applies": "all",
+   "market": "all",
+   "label": "未預期營收(SUR)",
+   "value": {
+    "var": "mr_sur"
+   },
+   "score": {
+    "type": "linear",
+    "bad": -1.5,
+    "good": 1.5
+   },
+   "weight": 1,
+   "fmt": "num",
+   "note": "",
+   "peer_blend": null,
+   "requires": "mr_present",
+   "gate": null,
+   "enabled": true
+  },
+  {
+   "key": "fv_upside",
+   "pillar": "valuation",
+   "applies": "all",
+   "market": "all",
+   "label": "相對公平價空間",
+   "value": {
+    "var": "upside"
+   },
+   "score": {
+    "type": "linear",
+    "bad": -0.3,
+    "good": 0.4
+   },
+   "weight": 3,
+   "fmt": "pct",
+   "note": "綜合公平價 ÷ 現價 − 1",
+   "peer_blend": null,
+   "requires": null,
+   "gate": null,
+   "enabled": true
+  },
+  {
+   "key": "pe_rank",
+   "pillar": "valuation",
+   "applies": "all",
+   "market": "all",
+   "label": "本益比位於自身 5 年分位",
+   "value": {
+    "var": "pe_rank"
+   },
+   "score": {
+    "type": "linear",
+    "bad": 0.9,
+    "good": 0.1
+   },
+   "weight": 2,
+   "fmt": "pct",
+   "note": "越低代表比自己過去便宜",
+   "peer_blend": null,
+   "requires": null,
+   "gate": null,
+   "enabled": true
+  },
+  {
+   "key": "fpe_vs_peers",
+   "pillar": "valuation",
+   "applies": "all",
+   "market": "all",
+   "label": "預估本益比 ÷ 同業中位數",
+   "value": {
+    "var": "fpe_rel_peers"
+   },
+   "score": {
+    "type": "linear",
+    "bad": 1.5,
+    "good": 0.7
+   },
+   "weight": 1.5,
+   "fmt": "x",
+   "note": "",
+   "peer_blend": null,
+   "requires": null,
+   "gate": null,
+   "enabled": true
+  },
+  {
+   "key": "fcf_yield",
+   "pillar": "valuation",
+   "applies": "all",
+   "market": "all",
+   "label": "自由現金流殖利率",
+   "value": {
+    "var": "fcf_yield"
+   },
+   "score": {
+    "type": "linear",
+    "bad": 0.0,
+    "good": 0.07
+   },
+   "weight": 1.5,
+   "fmt": "pct",
+   "note": "",
+   "peer_blend": null,
+   "requires": null,
+   "gate": null,
+   "enabled": true
+  },
+  {
+   "key": "ev_ebitda",
+   "pillar": "valuation",
+   "applies": "non_financial",
+   "market": "all",
+   "label": "EV/EBITDA",
+   "value": {
+    "var": "ev_ebitda"
+   },
+   "score": {
+    "type": "linear",
+    "bad": 25,
+    "good": 6
+   },
+   "weight": 1,
+   "fmt": "x",
+   "note": "",
+   "peer_blend": {
+    "peer_var": "peer_pct_ev_ebitda",
+    "abs_weight": 0.6,
+    "higher_better": false
+   },
+   "requires": null,
+   "gate": null,
+   "enabled": true
+  },
+  {
+   "key": "peg",
+   "pillar": "valuation",
+   "applies": "all",
+   "market": "all",
+   "label": "PEG(預估本益比 ÷ 成長)",
+   "value": {
+    "var": "peg"
+   },
+   "score": {
+    "type": "linear",
+    "bad": 3,
+    "good": 0.8
+   },
+   "weight": 1,
+   "fmt": "x",
+   "note": "",
+   "peer_blend": null,
+   "requires": null,
+   "gate": null,
+   "enabled": true
+  },
+  {
+   "key": "pb",
+   "pillar": "valuation",
+   "applies": "financial",
+   "market": "all",
+   "label": "股價淨值比",
+   "value": {
+    "var": "pb"
+   },
+   "score": {
+    "type": "linear",
+    "bad": 2.5,
+    "good": 0.8
+   },
+   "weight": 1.5,
+   "fmt": "x",
+   "note": "",
+   "peer_blend": null,
+   "requires": null,
+   "gate": null,
+   "enabled": true
+  },
+  {
+   "key": "altman_z",
+   "pillar": "health",
+   "applies": "non_financial",
+   "market": "all",
+   "label": "Altman Z-score",
+   "value": {
+    "var": "altman_z"
+   },
+   "score": {
+    "type": "linear",
+    "bad": 1.8,
+    "good": 3.0
+   },
+   "weight": 2,
+   "fmt": "num",
+   "note": "> 2.99 安全、1.81–2.99 灰色、< 1.81 危險",
+   "peer_blend": null,
+   "requires": null,
+   "gate": null,
+   "enabled": true
+  },
+  {
+   "key": "piotroski",
+   "pillar": "health",
+   "applies": "non_financial",
+   "market": "all",
+   "label": "Piotroski F-score",
+   "value": {
+    "var": "piotroski"
+   },
+   "score": {
+    "type": "linear",
+    "bad": 2,
+    "good": 8
+   },
+   "weight": 2,
+   "fmt": "int",
+   "note": "9 項財務改善檢查;≥ 7 分強、≤ 3 分弱",
+   "peer_blend": null,
+   "requires": null,
+   "gate": null,
+   "enabled": true
+  },
+  {
+   "key": "net_debt_ebitda",
+   "pillar": "health",
+   "applies": "non_financial",
+   "market": "all",
+   "label": "淨負債 ÷ EBITDA",
+   "value": {
+    "var": "net_debt_ebitda"
+   },
+   "score": {
+    "type": "builtin",
+    "fn": "net_debt_ebitda",
+    "bad": 4,
+    "good": 0
+   },
+   "weight": 1.5,
+   "fmt": "x",
+   "note": "",
+   "peer_blend": null,
+   "requires": null,
+   "gate": null,
+   "enabled": true
+  },
+  {
+   "key": "interest_coverage",
+   "pillar": "health",
+   "applies": "non_financial",
+   "market": "all",
+   "label": "利息保障倍數",
+   "value": {
+    "var": "interest_coverage"
+   },
+   "score": {
+    "type": "linear",
+    "bad": 2,
+    "good": 15
+   },
+   "weight": 1.5,
+   "fmt": "x",
+   "note": "",
+   "peer_blend": null,
+   "requires": null,
+   "gate": null,
+   "enabled": true
+  },
+  {
+   "key": "current_ratio",
+   "pillar": "health",
+   "applies": "non_financial",
+   "market": "all",
+   "label": "流動比率",
+   "value": {
+    "var": "current_ratio"
+   },
+   "score": {
+    "type": "linear",
+    "bad": 0.8,
+    "good": 2.0
+   },
+   "weight": 1,
+   "fmt": "x",
+   "note": "",
+   "peer_blend": null,
+   "requires": null,
+   "gate": null,
+   "enabled": true
+  },
+  {
+   "key": "de",
+   "pillar": "health",
+   "applies": "non_financial",
+   "market": "all",
+   "label": "負債 ÷ 股東權益",
+   "value": {
+    "var": "debt_to_equity"
+   },
+   "score": {
+    "type": "linear",
+    "bad": 2.0,
+    "good": 0.2
+   },
+   "weight": 1,
+   "fmt": "x",
+   "note": "",
+   "peer_blend": null,
+   "requires": null,
+   "gate": null,
+   "enabled": true
+  },
+  {
+   "key": "beneish",
+   "pillar": "health",
+   "applies": "non_financial",
+   "market": "all",
+   "label": "Beneish M-score",
+   "value": {
+    "var": "beneish_m"
+   },
+   "score": {
+    "type": "builtin",
+    "fn": "beneish"
+   },
+   "weight": 1,
+   "fmt": "num",
+   "note": "> −1.78 代表財報操縱風險偏高;高成長公司容易誤判",
+   "peer_blend": null,
+   "requires": "beneish_present",
+   "gate": null,
+   "enabled": true
+  },
+  {
+   "key": "equity_assets",
+   "pillar": "health",
+   "applies": "financial",
+   "market": "all",
+   "label": "股東權益 ÷ 總資產(資本厚度)",
+   "value": {
+    "var": "equity_assets"
+   },
+   "score": {
+    "type": "linear",
+    "bad": 0.04,
+    "good": 0.12
+   },
+   "weight": 2,
+   "fmt": "pct",
+   "note": "金融業的槓桿天生高;權益占資產 > 10% 算厚實",
+   "peer_blend": null,
+   "requires": null,
+   "gate": null,
+   "enabled": true
+  },
+  {
+   "key": "loss_years_fin",
+   "pillar": "health",
+   "applies": "financial",
+   "market": "all",
+   "label": "近 10 年虧損年數",
+   "value": {
+    "var": "loss_years_10y"
+   },
+   "score": {
+    "type": "linear",
+    "bad": 2,
+    "good": 0
+   },
+   "weight": 1,
+   "fmt": "int",
+   "note": "",
+   "peer_blend": null,
+   "requires": null,
+   "gate": null,
+   "enabled": true
+  },
+  {
+   "key": "mom_12_1",
+   "pillar": "momentum",
+   "applies": "all",
+   "market": "all",
+   "label": "12-1 個月動能",
+   "value": {
+    "var": "mom_12_1"
+   },
+   "score": {
+    "type": "linear",
+    "bad": -0.2,
+    "good": 0.4
+   },
+   "weight": 2,
+   "fmt": "pct",
+   "note": "過去 12 個月扣掉最近 1 個月的報酬(Jegadeesh & Titman)",
+   "peer_blend": null,
+   "requires": "tech_available",
+   "gate": null,
+   "enabled": true
+  },
+  {
+   "key": "from_high",
+   "pillar": "momentum",
+   "applies": "all",
+   "market": "all",
+   "label": "距 52 週高點",
+   "value": {
+    "var": "pct_from_52w_high"
+   },
+   "score": {
+    "type": "linear",
+    "bad": -0.35,
+    "good": 0
+   },
+   "weight": 1.5,
+   "fmt": "pct",
+   "note": "George & Hwang (2004)",
+   "peer_blend": null,
+   "requires": "tech_available",
+   "gate": null,
+   "enabled": true
+  },
+  {
+   "key": "vs_ma200",
+   "pillar": "momentum",
+   "applies": "all",
+   "market": "all",
+   "label": "股價相對 200 日線",
+   "value": {
+    "var": "vs_ma200"
+   },
+   "score": {
+    "type": "linear",
+    "bad": -0.15,
+    "good": 0.15
+   },
+   "weight": 1.5,
+   "fmt": "pct",
+   "note": "",
+   "peer_blend": null,
+   "requires": "tech_available",
+   "gate": null,
+   "enabled": true
+  },
+  {
+   "key": "ma200_slope",
+   "pillar": "momentum",
+   "applies": "all",
+   "market": "all",
+   "label": "200 日線斜率(20 日)",
+   "value": {
+    "var": "ma200_slope_20d"
+   },
+   "score": {
+    "type": "linear",
+    "bad": -0.03,
+    "good": 0.03
+   },
+   "weight": 1,
+   "fmt": "pct",
+   "note": "",
+   "peer_blend": null,
+   "requires": "tech_available",
+   "gate": null,
+   "enabled": true
+  },
+  {
+   "key": "rel_6m",
+   "pillar": "momentum",
+   "applies": "all",
+   "market": "all",
+   "label": "6 個月相對大盤",
+   "value": {
+    "var": "rel_6m"
+   },
+   "score": {
+    "type": "linear",
+    "bad": -0.2,
+    "good": 0.2
+   },
+   "weight": 1.5,
+   "fmt": "pct",
+   "note": "",
+   "peer_blend": null,
+   "requires": "tech_available",
+   "gate": null,
+   "enabled": true
+  },
+  {
+   "key": "rsi",
+   "pillar": "momentum",
+   "applies": "all",
+   "market": "all",
+   "label": "RSI(14)",
+   "value": {
+    "var": "rsi14"
+   },
+   "score": {
+    "type": "peak",
+    "center": 58,
+    "slope": 2.5
+   },
+   "weight": 0.5,
+   "fmt": "num",
+   "note": "50–65 最健康;過高過熱、過低弱勢",
+   "peer_blend": null,
+   "requires": "tech_available",
+   "gate": null,
+   "enabled": true
+  },
+  {
+   "key": "trend",
+   "pillar": "momentum",
+   "applies": "all",
+   "market": "all",
+   "label": "趨勢狀態",
+   "value": {
+    "var": "trend_code"
+   },
+   "score": {
+    "type": "map",
+    "table": {
+     "-2": 10,
+     "-1": 30,
+     "0": 50,
+     "1": 75,
+     "2": 90
+    }
+   },
+   "weight": 1.5,
+   "fmt": "trend",
+   "note": "",
+   "peer_blend": null,
+   "requires": "tech_available",
+   "gate": null,
+   "enabled": true
+  },
+  {
+   "key": "foreign_20d",
+   "pillar": "flows",
+   "applies": "all",
+   "market": "TW",
+   "label": "外資 20 日買賣超(占股本)",
+   "value": {
+    "var": "foreign_d20_pct"
+   },
+   "score": {
+    "type": "linear",
+    "bad": -0.003,
+    "good": 0.003
+   },
+   "weight": 2,
+   "fmt": "pct2",
+   "note": "",
+   "peer_blend": null,
+   "requires": null,
+   "gate": null,
+   "enabled": true
+  },
+  {
+   "key": "trust_20d",
+   "pillar": "flows",
+   "applies": "all",
+   "market": "TW",
+   "label": "投信 20 日買賣超(占股本)",
+   "value": {
+    "var": "trust_d20_pct"
+   },
+   "score": {
+    "type": "linear",
+    "bad": -0.002,
+    "good": 0.002
+   },
+   "weight": 1.5,
+   "fmt": "pct2",
+   "note": "",
+   "peer_blend": null,
+   "requires": null,
+   "gate": null,
+   "enabled": true
+  },
+  {
+   "key": "foreign_streak",
+   "pillar": "flows",
+   "applies": "all",
+   "market": "TW",
+   "label": "外資連續買賣超天數",
+   "value": {
+    "var": "foreign_streak"
+   },
+   "score": {
+    "type": "linear",
+    "bad": -5,
+    "good": 5
+   },
+   "weight": 0.5,
+   "fmt": "int",
+   "note": "",
+   "peer_blend": null,
+   "requires": null,
+   "gate": null,
+   "enabled": true
+  },
+  {
+   "key": "foreign_hold_60d",
+   "pillar": "flows",
+   "applies": "all",
+   "market": "TW",
+   "label": "外資持股比 60 日變化",
+   "value": {
+    "var": "foreign_hold_chg_60d"
+   },
+   "score": {
+    "type": "linear",
+    "bad": -2,
+    "good": 2
+   },
+   "weight": 1.5,
+   "fmt": "pp_raw",
+   "note": "",
+   "peer_blend": null,
+   "requires": null,
+   "gate": null,
+   "enabled": true
+  },
+  {
+   "key": "margin_20d",
+   "pillar": "flows",
+   "applies": "all",
+   "market": "TW",
+   "label": "融資餘額 20 日變化",
+   "value": {
+    "var": "margin_chg_20d"
+   },
+   "score": {
+    "type": "linear",
+    "bad": 0.15,
+    "good": -0.1
+   },
+   "weight": 1.0,
+   "fmt": "pct",
+   "note": "融資大增通常代表散戶追價(反向指標);融資占股本 < 0.5% 時權重降低",
+   "peer_blend": null,
+   "requires": null,
+   "gate": null,
+   "enabled": true,
+   "weight_fn": "margin_weight"
+  },
+  {
+   "key": "big1000_chg",
+   "pillar": "flows",
+   "applies": "all",
+   "market": "TW",
+   "label": "千張大戶持股比週變化",
+   "value": {
+    "var": "big1000_chg"
+   },
+   "score": {
+    "type": "linear",
+    "bad": -0.5,
+    "good": 0.5
+   },
+   "weight": 1,
+   "fmt": "pp_raw",
+   "note": "",
+   "peer_blend": null,
+   "requires": null,
+   "gate": null,
+   "enabled": true
+  },
+  {
+   "key": "holders_chg",
+   "pillar": "flows",
+   "applies": "all",
+   "market": "TW",
+   "label": "股東人數週變化",
+   "value": {
+    "var": "holders_chg"
+   },
+   "score": {
+    "type": "linear",
+    "bad": 0.03,
+    "good": -0.03
+   },
+   "weight": 0.5,
+   "fmt": "pct",
+   "note": "散戶人數減少 = 籌碼集中",
+   "peer_blend": null,
+   "requires": null,
+   "gate": null,
+   "enabled": true
+  },
+  {
+   "key": "insider",
+   "pillar": "flows",
+   "applies": "all",
+   "market": "US",
+   "label": "內部人 6 個月買進",
+   "value": {
+    "var": "insider_buy_count_6m"
+   },
+   "score": {
+    "type": "builtin",
+    "fn": "insider"
+   },
+   "weight": 2,
+   "fmt": "int",
+   "note": "Cohen, Malloy & Pomorski:投機性買進才有資訊量;例行性賣出多半是稅務/分散",
+   "peer_blend": null,
+   "requires": "insider_present",
+   "gate": null,
+   "enabled": true
+  },
+  {
+   "key": "short_float",
+   "pillar": "flows",
+   "applies": "all",
+   "market": "US",
+   "label": "放空占流通股比",
+   "value": {
+    "var": "short_pct_float"
+   },
+   "score": {
+    "type": "linear",
+    "bad": 0.15,
+    "good": 0.01
+   },
+   "weight": 2,
+   "fmt": "pct",
+   "note": "放空高的股票後續報酬偏弱(但有軋空風險)",
+   "peer_blend": null,
+   "requires": null,
+   "gate": null,
+   "enabled": true
+  },
+  {
+   "key": "short_chg",
+   "pillar": "flows",
+   "applies": "all",
+   "market": "US",
+   "label": "放空股數月變化",
+   "value": {
+    "var": "short_chg_vs_prior"
+   },
+   "score": {
+    "type": "linear",
+    "bad": 0.2,
+    "good": -0.2
+   },
+   "weight": 1,
+   "fmt": "pct",
+   "note": "",
+   "peer_blend": null,
+   "requires": null,
+   "gate": null,
+   "enabled": true
+  },
+  {
+   "key": "inst_adding",
+   "pillar": "flows",
+   "applies": "all",
+   "market": "US",
+   "label": "前十大機構加碼比例",
+   "value": {
+    "var": "inst_net_adding"
+   },
+   "score": {
+    "type": "linear",
+    "bad": 0.3,
+    "good": 0.7
+   },
+   "weight": 1,
+   "fmt": "pct",
+   "note": "",
+   "peer_blend": null,
+   "requires": null,
+   "gate": null,
+   "enabled": true
+  },
+  {
+   "key": "eps0y_90d",
+   "pillar": "revisions",
+   "applies": "all",
+   "market": "all",
+   "label": "今年 EPS 預估 90 日修正",
+   "value": {
+    "var": "eps0y_chg_90d"
+   },
+   "score": {
+    "type": "linear",
+    "bad": -0.05,
+    "good": 0.05
+   },
+   "weight": 2,
+   "fmt": "pct",
+   "note": "",
+   "peer_blend": null,
+   "requires": null,
+   "gate": null,
+   "enabled": true
+  },
+  {
+   "key": "eps1y_90d",
+   "pillar": "revisions",
+   "applies": "all",
+   "market": "all",
+   "label": "明年 EPS 預估 90 日修正",
+   "value": {
+    "var": "eps1y_chg_90d"
+   },
+   "score": {
+    "type": "linear",
+    "bad": -0.05,
+    "good": 0.05
+   },
+   "weight": 1.5,
+   "fmt": "pct",
+   "note": "",
+   "peer_blend": null,
+   "requires": null,
+   "gate": null,
+   "enabled": true
+  },
+  {
+   "key": "eps0y_30d",
+   "pillar": "revisions",
+   "applies": "all",
+   "market": "all",
+   "label": "今年 EPS 預估 30 日修正",
+   "value": {
+    "var": "eps0y_chg_30d"
+   },
+   "score": {
+    "type": "linear",
+    "bad": -0.02,
+    "good": 0.02
+   },
+   "weight": 1,
+   "fmt": "pct",
+   "note": "",
+   "peer_blend": null,
+   "requires": null,
+   "gate": null,
+   "enabled": true
+  },
+  {
+   "key": "breadth",
+   "pillar": "revisions",
+   "applies": "all",
+   "market": "all",
+   "label": "上修家數 − 下修家數(占比)",
+   "value": {
+    "var": "rev_breadth"
+   },
+   "score": {
+    "type": "linear",
+    "bad": -0.5,
+    "good": 0.5
+   },
+   "weight": 1.5,
+   "fmt": "pct",
+   "note": "",
+   "peer_blend": null,
+   "requires": null,
+   "gate": null,
+   "enabled": true
+  },
+  {
+   "key": "surprise",
+   "pillar": "revisions",
+   "applies": "all",
+   "market": "all",
+   "label": "近 4 季平均財報驚喜",
+   "value": {
+    "var": "surprise_avg_4q"
+   },
+   "score": {
+    "type": "linear",
+    "bad": -0.05,
+    "good": 0.08
+   },
+   "weight": 1.5,
+   "fmt": "pct",
+   "note": "",
+   "peer_blend": null,
+   "requires": null,
+   "gate": null,
+   "enabled": true
+  },
+  {
+   "key": "beats",
+   "pillar": "revisions",
+   "applies": "all",
+   "market": "all",
+   "label": "近 4 季打敗預期次數",
+   "value": {
+    "var": "beats_4q"
+   },
+   "score": {
+    "type": "linear",
+    "bad": 1,
+    "good": 4
+   },
+   "weight": 0.5,
+   "fmt": "int",
+   "note": "",
+   "peer_blend": null,
+   "requires": null,
+   "gate": null,
+   "enabled": true
+  },
+  {
+   "key": "rec_chg",
+   "pillar": "revisions",
+   "applies": "all",
+   "market": "all",
+   "label": "評等分數 3 個月變化",
+   "value": {
+    "var": "rec_score_chg_3m"
+   },
+   "score": {
+    "type": "linear",
+    "bad": -0.3,
+    "good": 0.3
+   },
+   "weight": 0.5,
+   "fmt": "num",
+   "note": "",
+   "peer_blend": null,
+   "requires": null,
+   "gate": null,
+   "enabled": true
+  },
+  {
+   "key": "rating_net",
+   "pillar": "revisions",
+   "applies": "all",
+   "market": "all",
+   "label": "90 日升降評與目標價調整(淨值)",
+   "value": {
+    "var": "rating_net"
+   },
+   "score": {
+    "type": "linear",
+    "bad": -3,
+    "good": 3
+   },
+   "weight": 1,
+   "fmt": "num",
+   "note": "",
+   "peer_blend": null,
+   "requires": "rating_changes_present",
+   "gate": null,
+   "enabled": true
+  },
+  {
+   "key": "news7",
+   "pillar": "sentiment",
+   "applies": "all",
+   "market": "all",
+   "label": "近 7 日新聞情緒",
+   "value": {
+    "var": "news_d7_avg"
+   },
+   "score": {
+    "type": "linear",
+    "bad": -0.4,
+    "good": 0.4
+   },
+   "weight": 2,
+   "fmt": "num",
+   "note": "",
+   "peer_blend": null,
+   "requires": null,
+   "gate": {
+    "var": "news_d7_n",
+    "min": 3
+   },
+   "enabled": true
+  },
+  {
+   "key": "news30",
+   "pillar": "sentiment",
+   "applies": "all",
+   "market": "all",
+   "label": "近 30 日新聞情緒",
+   "value": {
+    "var": "news_d30_avg"
+   },
+   "score": {
+    "type": "linear",
+    "bad": -0.3,
+    "good": 0.3
+   },
+   "weight": 1,
+   "fmt": "num",
+   "note": "",
+   "peer_blend": null,
+   "requires": null,
+   "gate": {
+    "var": "news_d30_n",
+    "min": 5
+   },
+   "enabled": true
+  }
+ ]
+}

@@ -1,0 +1,98 @@
+/* H0 Lab 設計 token(階段 3 D2;方向見 docs/介面設計方向.md:電腦 macOS 版面、手機 iOS 版面)。
+   - 跟系統設定(prefers-color-scheme)切換深色 / 淺色;`<html data-theme="dark|light">` 可強制(只給測試、檢查用,網站本身不強制)。
+   - 淺色區塊同時提供舊頁面樣式 app.css 用到的變數(--panel、--label、--accent…),兩份淺色區塊必須一致(測試會檢查)。
+   - 規則 7:深色模式沒有灰色或暗色文字;次要文字用淡藍白,不用透明度淡化。
+   - 文字色的對比由 tests/test_design_system.py 檢查(主要 / 次要文字對所有底色 ≥ 7:1,狀態色 ≥ 4.5:1)。
+   - 版面斷點 820px:以上是 macOS(側邊欄、工具列、右側檢視器),以下是 iOS(大標題、底部標籤列、底部彈出卡)。 */
+:root {
+  color-scheme: dark;
+  /* 底色(2026-11 商業化改版:純黑 → 帶藍的深色,卡片用邊框分層) */
+  --bg: #0a0d14;          /* 頁面底 */
+  --surface: #121722;     /* 卡片、清單 */
+  --surface2: #1b2231;    /* 按下、分段控制、環的底 */
+  --chrome: #0d1119;      /* 工具列、標籤列 */
+  --side: #0d1119;        /* 側邊欄、檢視器 */
+  --sep: #273145;         /* 分隔線、卡片邊框(不是文字色) */
+  --sel-soft: #1c2a4f;    /* 側邊欄選取底色(柔和版),上面放主要文字 */
+  --scrim: rgba(0, 0, 0, .55);  /* 彈出卡後面的遮罩(不是文字) */
+  /* 介面質感:毛玻璃、格線底紋、聚焦光環(都不是文字色) */
+  --side-glass: rgba(13, 17, 25, .78);    /* 側邊欄毛玻璃底 */
+  --chrome-glass: rgba(10, 13, 20, .72);  /* 工具列毛玻璃底 */
+  --overlay-glass: rgba(18, 23, 34, .96); /* 指令面板、提示訊息:浮在內容上,幾乎不透明才讀得清楚 */
+  --grid-line: rgba(138, 180, 255, .045);  /* 座標紙格線 */
+  --focus: 0 0 0 3px rgba(79, 124, 255, .45);
+  --glow-brand: 0 0 0 1px rgba(79, 124, 255, .35);   /* 只留 1px 邊,不做擴散光暈 */
+  /* 文字 */
+  --text: #ffffff;
+  --text2: #cfdcf5;       /* 次要文字:淡藍白,不是灰 */
+  /* 狀態與強調 */
+  --blue: #4f7cff;        /* 互動、品牌主色 */
+  --brand2: #22d3ee;      /* 圖表系列色(web/js/charts.js),不做介面裝飾 */
+  --link: #8ab4ff;        /* 連結文字(在深色底上對比較高) */
+  --green: #30d158;
+  --yellow: #ffd60a;
+  --orange: #ff9f0a;
+  --red: #ff6961;
+  --sel: #3a5bea;         /* 主要按鈕底色,上面放白字 */
+  --on-accent: #ffffff;   /* 放在 --sel 上的文字 */
+  --on-status: #000000;   /* 放在 --up / --down 色塊上的文字(漲跌小方塊) */
+  /* 漲跌(台灣習慣紅漲綠跌;body.us-colors 對調) */
+  --up: var(--red);
+  --down: var(--green);
+  /* 字與形狀 */
+  --font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang TC", "Noto Sans TC", "Microsoft JhengHei", sans-serif;
+  --mono: "SF Mono", ui-monospace, Menlo, Consolas, monospace;
+  --fs-largetitle: 32px;
+  --fs-title: 22px;
+  --fs-body: 15px;
+  --fs-small: 13px;
+  --fs-hero: 40px;
+  --r-card: 14px;
+  --shadow: 0 1px 2px rgba(0, 0, 0, .3), 0 8px 24px rgba(0, 0, 0, .18);
+  --r-ctl: 8px;
+  /* 動態:iOS 常見的減速曲線 */
+  --ease: cubic-bezier(.32, .72, 0, 1);
+  --dur: .4s;
+  /* 版面 */
+  --side-w: 240px;
+  --insp-w: 320px;
+  --tab-h: 78px;
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    color-scheme: light;
+    --bg: #f5f7fb; --surface: #ffffff; --surface2: #e8ecf4; --chrome: #ffffff; --side: #f9fafc; --sep: #dde3ee; --sel-soft: #e3eaff; --scrim: rgba(0, 0, 0, .35);
+    --text: #000000; --text2: #1d2b4a;
+    --blue: #2f55e4; --brand2: #0891b2; --link: #0050c0; --green: #15702f; --yellow: #7d5800; --orange: #b03000; --red: #c0000f; --sel: #2f55e4; --on-status: #ffffff;
+    --shadow: 0 1px 2px rgba(16, 24, 40, .06), 0 6px 18px rgba(16, 24, 40, .06);
+    --side-glass: rgba(249, 250, 252, .82); --chrome-glass: rgba(255, 255, 255, .78); --overlay-glass: rgba(255, 255, 255, .97); --grid-line: rgba(47, 85, 228, .05);
+    --focus: 0 0 0 3px rgba(47, 85, 228, .3); --glow-brand: 0 0 0 1px rgba(47, 85, 228, .25);
+    /* 舊頁面(app.css)用到的變數的淺色值 */
+    --bg2: #f7f7fa; --panel: #ffffff; --panel2: #e6ecf7; --card-end: #f7f8fb; --line: #d1d1d6; --line2: #b8bfcc; --chart-grid: #e3e6ee; --glow: #f2f2f7;
+    --label: #1d2b4a; --muted-strong: #1d2b4a; --tip-f: #0b2a66; --pin: #000000;
+    --accent: #0050c0; --accent2: #5b3fd0; --pos: #006b5a; --neg: #b03000; --watch: #7d5800;
+    --r4: #006b5a; --r3: #0050c0; --r2: #7d5800; --r1: #a03c00; --r0: #c0000f;
+    --agent-ink: var(--text);   /* agent 卡片名稱:淺色底上不用亮色字,改用主要文字色(顏色由上緣色條表示) */
+  }
+}
+:root[data-theme="light"] {
+  color-scheme: light;
+  --bg: #f5f7fb; --surface: #ffffff; --surface2: #e8ecf4; --chrome: #ffffff; --side: #f9fafc; --sep: #dde3ee; --sel-soft: #e3eaff; --scrim: rgba(0, 0, 0, .35);
+  --text: #000000; --text2: #1d2b4a;
+  --blue: #2f55e4; --brand2: #0891b2; --link: #0050c0; --green: #15702f; --yellow: #7d5800; --orange: #b03000; --red: #c0000f; --sel: #2f55e4; --on-status: #ffffff;
+    --shadow: 0 1px 2px rgba(16, 24, 40, .06), 0 6px 18px rgba(16, 24, 40, .06);
+    --side-glass: rgba(249, 250, 252, .82); --chrome-glass: rgba(255, 255, 255, .78); --overlay-glass: rgba(255, 255, 255, .97); --grid-line: rgba(47, 85, 228, .05);
+    --focus: 0 0 0 3px rgba(47, 85, 228, .3); --glow-brand: 0 0 0 1px rgba(47, 85, 228, .25);
+  /* 舊頁面(app.css)用到的變數的淺色值 */
+  --bg2: #f7f7fa; --panel: #ffffff; --panel2: #e6ecf7; --card-end: #f7f8fb; --line: #d1d1d6; --line2: #b8bfcc; --chart-grid: #e3e6ee; --glow: #f2f2f7;
+  --label: #1d2b4a; --muted-strong: #1d2b4a; --tip-f: #0b2a66; --pin: #000000;
+  --accent: #0050c0; --accent2: #5b3fd0; --pos: #006b5a; --neg: #b03000; --watch: #7d5800;
+  --r4: #006b5a; --r3: #0050c0; --r2: #7d5800; --r1: #a03c00; --r0: #c0000f;
+  --agent-ink: var(--text);   /* agent 卡片名稱:淺色底上不用亮色字,改用主要文字色(顏色由上緣色條表示) */
+}
+body.us-colors { --up: var(--green); --down: var(--red); }
+
+@media (prefers-reduced-motion: reduce) {
+  :root { --dur: 0s; }
+}
