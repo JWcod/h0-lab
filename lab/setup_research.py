@@ -213,11 +213,12 @@ def record_result(code: int, bad: list[str]) -> None:
     from .setup_job import EXIT_MESSAGES
     from .setup_status import PARTIAL_ACCEPTED, previous_missing, save_research_result
     result = EXIT_MESSAGES.get(code, "failed")
-    if result == "partial" and previous_missing() == sorted(bad):
+    items = sorted(x.split(":")[0] for x in bad)   # 只比項目:同一筆兩次的例外類型可能不同
+    if result == "partial" and previous_missing() == items:
         say("這些資料連續兩次都抓不到,不再提醒重試;想補抓還是可以重跑。")
         result = PARTIAL_ACCEPTED
     try:
-        save_research_result(result, sorted(bad))
+        save_research_result(result, items)
     except OSError as e:   # 記不下來不該把建好的資料變成失敗
         say(f"無法記錄這次的結果({type(e).__name__})")
 

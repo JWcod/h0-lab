@@ -218,6 +218,13 @@ def test_same_items_missing_twice_stops_asking_to_retry(monkeypatch, tmp_path):
     assert _research_step(tmp_path)["done"] is False
 
 
+def test_same_item_with_a_different_error_still_counts_as_the_same(monkeypatch, tmp_path):
+    _run_main(monkeypatch, tmp_path, ["SEC X:Timeout"])
+    assert _research_step(tmp_path)["done"] is False
+    _run_main(monkeypatch, tmp_path, ["SEC X:HTTPError"])
+    assert _research_step(tmp_path)["done"] is True
+
+
 def test_repeated_sec_refusal_keeps_asking(monkeypatch, tmp_path):
     bad = [f"{LR.SEC_REFUSED}(HTTP 403)"]
     for _ in range(2):
