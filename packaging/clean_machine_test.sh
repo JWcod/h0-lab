@@ -122,23 +122,44 @@ started="$(date +%s)"
 limit 2400 "$BIN" --h0-run lab.setup_research --tw 2330,2317 --us AAPL,MSFT >"$log" 2>&1
 code=$?
 info "建立資料花了 $(( ($(date +%s) - started) / 60 )) 分鐘"
-if [ "$code" -eq 0 ]; then ok "建立回測資料"; else bad "建立回測資料(結束碼 $code)"; echo "--- 進度最後 15 行"; tail -n 15 "$log"; echo "---"; fi
+if [ "$code" -eq 0 ]; then ok "建立回測資料"; else bad "建立回測資料(結束碼 $code)"; fi
+# 只印 say() 的進度行(開頭是時間):內容是步驟、代號與檔名,不含抓到的資料
+echo "--- 建立資料的進度(最後 10 行)"
+grep -E '^[0-9]{2}:[0-9]{2}:[0-9]{2} ' "$log" | tail -n 10
+echo "---"
 
 if start_app; then ok "建好資料後能重新啟動"; else bad "建好資料後無法重新啟動"; finish; fi
-done_flag="$(get /api/setup/status 30 | jq_perl 'my ($s) = grep { $_->{id} eq "research" } @{$d->{steps}}; $s->{done} ? "yes" : "no"')"
+status_json="$(get /api/setup/status 30)"
+done_flag="$(printf '%s' "$status_json" | jq_perl 'my ($s) = grep { $_->{id} eq "research" } @{$d->{steps}}; $s->{done} ? "yes" : "no"')"
+for m in TW US; do
+  info "$m 回測資料:$(printf '%s' "$status_json" | jq_perl 'my $r = $d->{research}{'"$m"'}; "缺 [" . join(",", @{$r->{missing}}) . "],股票池 [" . join(",", @{$r->{universes}}) . "]"')"
+done
 [ "$done_flag" = "yes" ] && ok "第一次使用狀態顯示資料已建好" || bad "資料建好後狀態還是沒完成($done_flag)"
 
-for sym in 2330 AAPL; do
+# 和介面一樣先搜尋,再用搜尋結果的代號開報告
+for q in 2330 AAPL; do
+  sym="$(get "/api/search?q=$q" 60 | jq_perl '$d->{results}[0]{symbol}')"
+  if [ -n "$sym" ]; then ok "搜尋 $q → $sym"; else bad "搜尋 $q 沒有結果"; continue; fi
   body="$WORK/report.json"
   code="$(curl -s --noproxy '*' -o "$body" -w '%{http_code}' -H 'x-requested-with: invest-lab' --max-time 300 "$BASE/api/report?symbol=$sym")"
   keys="$(jq_perl 'ref $d eq "HASH" ? scalar(keys %$d) : 0' <"$body")"
-  if [ "$code" = "200" ] && [ "${keys:-0}" -gt 5 ]; then ok "$sym 報告(HTTP $code,$keys 個欄位)"; else bad "$sym 報告(HTTP $code,${keys:-0} 個欄位)"; fi
+  if [ "$code" = "200" ] && [ "${keys:-0}" -gt 5 ]; then
+    ok "$sym 報告(HTTP $code,$keys 個欄位)"
+  else
+    bad "$sym 報告(HTTP $code,${keys:-0} 個欄位):$(jq_perl '$d->{detail}' <"$body" | cut -c1-120)"
+  fi
   rm -f "$body"
 done
 
-out="$(post /api/wizard/preview '{"template":"value","market":"TW"}' 120)"
-valid="$(printf '%s' "$out" | jq_perl '$d->{ok} ? "yes" : "no"')"
-count="$(printf '%s' "$out" | jq_perl 'ref $d->{ranking} eq "ARRAY" ? scalar(@{$d->{ranking}}) : (ref $d->{ranking} eq "HASH" && ref $d->{ranking}{rows} eq "ARRAY" ? scalar(@{$d->{ranking}{rows}}) : -1)')"
-if [ "$valid" = "yes" ]; then ok "精靈預覽(排名 $count 筆)"; else bad "精靈預覽沒有成功"; fi
+for market in TW US; do
+  out="$(post /api/wizard/preview "{\"template\":\"value\",\"market\":\"$market\"}" 120)"
+  valid="$(printf '%s' "$out" | jq_perl '$d->{ok} ? "yes" : "no"')"
+  count="$(printf '%s' "$out" | jq_perl '$d->{ranking}{n} // 0')"
+  if [ "$valid" = "yes" ] && [ "${count:-0}" -gt 0 ]; then
+    ok "$market 精靈排名($count 筆)"
+  else
+    bad "$market 精靈排名(ok=$valid,$count 筆):$(printf '%s' "$out" | jq_perl '$d->{ranking_error} // $d->{error} // $d->{detail}' | cut -c1-160)"
+  fi
+done
 
 finish
