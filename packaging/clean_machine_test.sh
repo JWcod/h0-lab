@@ -36,10 +36,12 @@ http_code() { curl -s --noproxy '*' -o /dev/null -w '%{http_code}' -H 'x-request
 get() { curl -fsS --noproxy '*' -H 'x-requested-with: invest-lab' --max-time "${2:-30}" "$BASE$1"; }
 post() { curl -sS --noproxy '*' --max-time "${3:-60}" -H 'x-requested-with: invest-lab' -H "Origin: $BASE" -H 'Content-Type: application/json' -d "$2" "$BASE$1"; }
 
+# 紀錄會公開,例外訊息的內容又是第三方決定的,所以只印 App 自己的狀態行和例外類型
 show_log() {
   [ -f "$SUPPORT/logs/app.log" ] || return 0
-  echo "--- app.log(最後 20 行)"
-  tail -n 20 "$SUPPORT/logs/app.log"
+  echo "--- app.log(只列狀態行與例外類型)"
+  grep -E '^\[H0 Lab\]' "$SUPPORT/logs/app.log" | tail -n 5
+  grep -oE '^[A-Za-z_.]*(Error|Exception)\b' "$SUPPORT/logs/app.log" | sort | uniq -c
   echo "---"
 }
 
@@ -116,19 +118,15 @@ case "$out" in
 esac
 stop_app
 
-export SEC_USER_AGENT="H0 Lab clean machine test ${GITHUB_REPOSITORY_OWNER:-ci}@users.noreply.github.com"
+# 只建台股:SEC 要求宣告真實的聯絡方式,測試機器沒有可以宣告的人,所以這裡完全不連 SEC。
+# 美股回測資料要靠真人用自己的聯絡方式實測(docs 的發布檢查清單);SEC 拒絕時的回報由單元測試涵蓋。
+info "美股回測資料這裡不驗證(不連 SEC)"
 log="$WORK/setup.log"
 started="$(date +%s)"
-limit 2400 "$BIN" --h0-run lab.setup_research --tw 2330,2317 --us AAPL,MSFT >"$log" 2>&1
+limit 2400 "$BIN" --h0-run lab.setup_research --tw 2330,2317 >"$log" 2>&1
 code=$?
 info "建立資料花了 $(( ($(date +%s) - started) / 60 )) 分鐘"
-# SEC 可能拒絕測試用的聯絡字串。不換字串去試它接受哪種:這時只驗證 App 有如實回報,台股要完整,美股流程要靠真人實測
-SEC_REFUSED=no
-case "$code" in
-  0) ok "建立回測資料" ;;
-  6) SEC_REFUSED=yes; ok "SEC 拒絕時如實回報沒有完成(結束碼 6)"; info "美股回測資料這次沒有驗證" ;;
-  *) bad "建立回測資料(結束碼 $code)" ;;
-esac
+[ "$code" -eq 0 ] && ok "建立台股回測資料" || bad "建立台股回測資料(結束碼 $code)"
 # 只印 say() 的進度行(開頭是時間):內容是步驟、代號與檔名,不含抓到的資料
 echo "--- 建立資料的進度(最後 10 行)"
 grep -E '^[0-9]{2}:[0-9]{2}:[0-9]{2} ' "$log" | tail -n 10
@@ -136,17 +134,11 @@ echo "---"
 
 if start_app; then ok "建好資料後能重新啟動"; else bad "建好資料後無法重新啟動"; finish; fi
 status_json="$(get /api/setup/status 30)"
+info "TW 回測資料:$(printf '%s' "$status_json" | jq_perl 'my $r = $d->{research}{TW}; "缺 [" . join(",", @{$r->{missing}}) . "],股票池 [" . join(",", @{$r->{universes}}) . "]"')"
+tw_ready="$(printf '%s' "$status_json" | jq_perl '$d->{research}{TW}{ready} ? "yes" : "no"')"
+[ "$tw_ready" = "yes" ] && ok "台股回測資料完整" || bad "台股回測資料不完整"
 done_flag="$(printf '%s' "$status_json" | jq_perl 'my ($s) = grep { $_->{id} eq "research" } @{$d->{steps}}; $s->{done} ? "yes" : "no"')"
-for m in TW US; do
-  info "$m 回測資料:$(printf '%s' "$status_json" | jq_perl 'my $r = $d->{research}{'"$m"'}; "缺 [" . join(",", @{$r->{missing}}) . "],股票池 [" . join(",", @{$r->{universes}}) . "]"')"
-done
-if [ "$SEC_REFUSED" = "yes" ]; then
-  [ "$done_flag" = "no" ] && ok "美股缺資料時,狀態如實顯示沒完成" || bad "美股缺資料,狀態卻顯示完成"
-  tw_ready="$(printf '%s' "$status_json" | jq_perl '$d->{research}{TW}{ready} ? "yes" : "no"')"
-  [ "$tw_ready" = "yes" ] && ok "台股回測資料完整" || bad "台股回測資料不完整"
-else
-  [ "$done_flag" = "yes" ] && ok "第一次使用狀態顯示資料已建好" || bad "資料建好後狀態還是沒完成($done_flag)"
-fi
+[ "$done_flag" = "no" ] && ok "美股沒建時,狀態如實顯示沒完成" || bad "美股沒建,狀態卻顯示完成"
 
 # 和介面一樣先搜尋,再用搜尋結果的代號開報告
 for q in 2330 AAPL; do
@@ -158,22 +150,18 @@ for q in 2330 AAPL; do
   if [ "$code" = "200" ] && [ "${keys:-0}" -gt 5 ]; then
     ok "$sym 報告(HTTP $code,$keys 個欄位)"
   else
-    bad "$sym 報告(HTTP $code,${keys:-0} 個欄位):$(jq_perl '$d->{detail}' <"$body" | cut -c1-120)"
+    bad "$sym 報告(HTTP $code,${keys:-0} 個欄位)"
   fi
   rm -f "$body"
 done
 
-markets="TW US"
-[ "$SEC_REFUSED" = "yes" ] && markets="TW"
-for market in $markets; do
-  out="$(post /api/wizard/preview "{\"template\":\"value\",\"market\":\"$market\"}" 120)"
-  valid="$(printf '%s' "$out" | jq_perl '$d->{ok} ? "yes" : "no"')"
-  count="$(printf '%s' "$out" | jq_perl '$d->{ranking}{n} // 0')"
-  if [ "$valid" = "yes" ] && [ "${count:-0}" -gt 0 ]; then
-    ok "$market 精靈排名($count 筆)"
-  else
-    bad "$market 精靈排名(ok=$valid,$count 筆):$(printf '%s' "$out" | jq_perl '$d->{ranking_error} // $d->{error} // $d->{detail}' | cut -c1-160)"
-  fi
-done
+out="$(post /api/wizard/preview '{"template":"value","market":"TW"}' 120)"
+valid="$(printf '%s' "$out" | jq_perl '$d->{ok} ? "yes" : "no"')"
+count="$(printf '%s' "$out" | jq_perl '$d->{ranking}{n} // 0')"
+if [ "$valid" = "yes" ] && [ "${count:-0}" -gt 0 ]; then
+  ok "台股精靈排名($count 筆)"
+else
+  bad "台股精靈排名(ok=$valid,$count 筆)"
+fi
 
 finish

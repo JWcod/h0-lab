@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
     inputs:
       online:
-        description: "macos-15 also downloads a small data set (about 180 requests) and opens a first report"
+        description: "macos-15 also downloads Taiwan data for two stocks (no SEC requests) and opens first reports"
         type: boolean
         default: false
 

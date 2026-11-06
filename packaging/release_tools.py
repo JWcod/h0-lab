@@ -38,7 +38,7 @@ BUILD_ONLY = {"pyinstaller", "pyinstaller-hooks-contrib", "altgraph", "macholib"
               "pytest", "ruff", "iniconfig", "pluggy", "pygments"}
 # Mach-O 執行檔開頭的 4 個位元組:64 位元(兩種位元組順序)與 universal
 MACHO_MAGIC = {b"\xcf\xfa\xed\xfe", b"\xfe\xed\xfa\xcf", b"\xca\xfe\xba\xbe", b"\xbe\xba\xfe\xca"}
-OUTSIDE_PREFIXES = ("/opt/", "/usr/local/", "/Library/Frameworks/", "/Users/")
+ALLOWED_REF_PREFIXES = ("@", "/usr/lib/", "/System/")
 
 
 def sha256_file(path: Path) -> str:
@@ -181,9 +181,23 @@ def parse_minos(vtool_output: str) -> tuple[int, ...] | None:
 
 
 def outside_refs(otool_output: str, own_id: str = "") -> list[str]:
-    """otool -L 的輸出裡指向 App 外面、一般 Mac 不會有的函式庫(/usr/lib 和 /System 是系統內建的)。"""
-    refs = [ln.strip().split(" (")[0] for ln in otool_output.splitlines()[1:] if ln.strip()]
-    return [r for r in refs if r != own_id and r.startswith(OUTSIDE_PREFIXES)]
+    """otool -L 的輸出裡不在白名單的函式庫:只有 App 內部(@)和系統內建(/usr/lib、/System)是每台 Mac 都有的。"""
+    refs = [ln.strip().split(" (")[0] for ln in otool_output.splitlines() if ln.strip() and not ln.rstrip().endswith(":")]
+    return [r for r in refs if r != own_id and not r.startswith(ALLOWED_REF_PREFIXES)]
+
+
+def outside_rpaths(otool_load_commands: str) -> list[str]:
+    """otool -l 裡指向 App 外面的 LC_RPATH:@rpath 的函式庫可能因此從使用者的電腦以外找不到。"""
+    found = re.findall(r"cmd LC_RPATH\s+cmdsize \d+\s+path (.+?) \(offset \d+\)", otool_load_commands)
+    return [p for p in found if not p.startswith("@")]
+
+
+def _tool(*cmd: str) -> str:
+    """工具失敗就中止:輸出是空的不代表沒問題。"""
+    r = subprocess.run(cmd, capture_output=True, text=True, check=False)
+    if r.returncode != 0:
+        raise SystemExit(f"{cmd[0]} 失敗(結束碼 {r.returncode}):{cmd[-1]}")
+    return r.stdout
 
 
 def cmd_check_portable(a) -> int:
@@ -197,13 +211,12 @@ def cmd_check_portable(a) -> int:
     for p in sorted(x for x in app.rglob("*") if x.is_file() and not x.is_symlink() and is_macho(x)):
         n += 1
         rel = p.relative_to(app)
-        build = subprocess.run(["/usr/bin/vtool", "-show-build", str(p)], capture_output=True, text=True, check=False).stdout
-        minos = parse_minos(build)
+        minos = parse_minos(_tool("/usr/bin/vtool", "-show-build", str(p)))
         if minos and minos > declared:
             too_new.append(f"{rel}(要 macOS {'.'.join(map(str, minos))})")
-        own = subprocess.run(["/usr/bin/otool", "-D", str(p)], capture_output=True, text=True, check=False).stdout.splitlines()
-        refs = subprocess.run(["/usr/bin/otool", "-L", str(p)], capture_output=True, text=True, check=False).stdout
-        outside += [f"{rel} → {r}" for r in outside_refs(refs, own[-1].strip() if len(own) > 1 else "")]
+        own = _tool("/usr/bin/otool", "-D", str(p)).splitlines()
+        outside += [f"{rel} → {r}" for r in outside_refs(_tool("/usr/bin/otool", "-L", str(p)), own[-1].strip() if len(own) > 1 else "")]
+        outside += [f"{rel} → rpath {r}" for r in outside_rpaths(_tool("/usr/bin/otool", "-l", str(p)))]
     if not n:
         raise SystemExit("App 裡找不到任何執行檔")
     if too_new or outside:

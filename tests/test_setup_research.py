@@ -119,7 +119,7 @@ def test_incomplete_without_sec_refusal_has_its_own_code(monkeypatch, tmp_path):
 
 
 def test_partial_failure_with_complete_markets_says_so(monkeypatch, tmp_path, capsys):
-    assert _run_main(monkeypatch, tmp_path, ["Yahoo 2330.TW"]) == 0
+    assert _run_main(monkeypatch, tmp_path, ["Yahoo 2330.TW"]) == LR.EXIT_PARTIAL
     assert "有 1 項沒抓到" in capsys.readouterr().out
 
 
@@ -140,3 +140,87 @@ def test_every_exit_code_has_interface_text():
     for result in setup_job.EXIT_MESSAGES.values():
         if result != "done":
             assert text.count(f'"research.err.{result}"') == 2, result   # 中文、英文各一份
+
+
+class _FakeSources:
+    """download() 用到的資料源:除了 SEC 都成功,不連網。"""
+
+    @staticmethod
+    def install(monkeypatch, tickers=None, companyfacts=None):
+        from lab.sources import finmind, sec, twse_hist, yahoo
+        calls = []
+        monkeypatch.setattr(yahoo, "history_since", lambda s: object())
+        monkeypatch.setattr(twse_hist, "total_return_month", lambda y, m: object())
+        monkeypatch.setattr(finmind, "get", lambda *a, **k: object())
+        monkeypatch.setattr(finmind, "budget_status", lambda: {"cooldown_remaining": 0, "used_last_hour": 0, "budget": 280})
+        monkeypatch.setattr(sec, "tickers", tickers or (lambda: object()))
+        monkeypatch.setattr(sec, "cik_for", lambda s, overrides=False: 1)
+
+        def facts(cik):
+            calls.append(cik)
+            return companyfacts() if companyfacts else object()
+        monkeypatch.setattr(sec, "companyfacts", facts)
+        monkeypatch.setattr(LR.time, "sleep", lambda s: None)
+        return calls
+
+
+def _sec_only(n=3):
+    return {"yahoo": [], "twse_tr": [], "finmind": [], "sec": [f"S{i}" for i in range(n)]}
+
+
+def test_download_stops_before_any_filing_when_the_ticker_list_is_refused(monkeypatch):
+    def refuse():
+        raise _http_error(403)
+    calls = _FakeSources.install(monkeypatch, tickers=refuse)
+    bad = LR.download(_sec_only())
+    assert calls == [] and len(bad) == 1 and bad[0].startswith(LR.SEC_REFUSED)
+
+
+def test_download_stops_when_filings_are_refused_after_a_cached_ticker_list(monkeypatch):
+    """Verifier 2026-11-06:對照表有快取時,拒絕要到抓財報才看得到,原本會逐檔重試、結束碼也不對。"""
+    def refuse():
+        raise _http_error(403)
+    calls = _FakeSources.install(monkeypatch, companyfacts=refuse)
+    bad = LR.download(_sec_only())
+    assert len(calls) == 1 and len(bad) == 1 and bad[0].startswith(LR.SEC_REFUSED)
+
+
+def test_download_keeps_going_when_one_filing_has_an_ordinary_error(monkeypatch):
+    def not_refused():
+        raise _http_error(500)
+    calls = _FakeSources.install(monkeypatch, companyfacts=not_refused)
+    bad = LR.download(_sec_only())
+    assert len(calls) == 3 and len(bad) == 3 and not any(x.startswith(LR.SEC_REFUSED) for x in bad)
+
+
+def test_exit_codes_map_to_their_interface_messages():
+    from lab import setup_job
+    assert setup_job.EXIT_MESSAGES[LR.EXIT_INCOMPLETE] == "incomplete"
+    assert setup_job.EXIT_MESSAGES[LR.EXIT_SEC_REFUSED] == "sec_refused"
+    assert setup_job.EXIT_MESSAGES[LR.EXIT_PARTIAL] == "partial"
+    assert LR.EXIT_FAILED not in setup_job.EXIT_MESSAGES   # 沒有對應就顯示「建立失敗」
+
+
+def test_refusal_with_missing_tw_is_not_blamed_on_the_sec(monkeypatch, tmp_path):
+    assert _run_main(monkeypatch, tmp_path, [f"{LR.SEC_REFUSED}(HTTP 403)"], ready=("US",)) == LR.EXIT_INCOMPLETE
+
+
+def test_compute_failure_never_leaks_its_own_exit_code(monkeypatch, tmp_path):
+    """計算的結束碼和這裡的結束碼是兩回事:傳回去介面會把 argparse 的 2 顯示成「離線模式」。"""
+    monkeypatch.setattr(LR.config, "DATA_DIR", tmp_path)
+    monkeypatch.setattr(LR.config, "OFFLINE", False)
+    monkeypatch.setattr(LR, "todo", lambda tw, us: _t())
+    monkeypatch.setattr(LR, "compute", lambda symbols: 2)
+    monkeypatch.setattr(LR, "download", lambda t: [])
+    assert LR.main(["--tw", "2330"]) == LR.EXIT_FAILED
+    monkeypatch.setattr(LR, "download", lambda t: [f"{LR.SEC_REFUSED}(HTTP 403)"])
+    assert LR.main(["--us", "AAPL"]) == LR.EXIT_SEC_REFUSED    # 只建美股、SEC 拒絕:judge 沒有資料可算
+
+
+def test_module_can_be_run_with_python_m():
+    """lab/setup_job.py 在原始碼模式用 python -m lab.setup_research:沒有入口時什麼都不做、結束碼 0,介面會顯示完成。"""
+    import subprocess
+    import sys
+    env = {"PATH": "/usr/bin:/bin", "INVEST_LAB_OFFLINE": "1", "PYTHONPATH": str(ROOT)}
+    r = subprocess.run([sys.executable, "-m", "lab.setup_research", "--plan"], cwd=str(ROOT), env=env, capture_output=True, text=True, timeout=120)
+    assert r.returncode == 0 and "要下載" in r.stdout

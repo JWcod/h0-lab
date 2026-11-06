@@ -40,8 +40,10 @@ TR_START = "2014-01-01"
 UNIVERSES = "tw_large40,us_large40"
 SEC_REFUSED = "SEC 拒絕連線"
 # 結束碼(lab/setup_job.py EXIT_MESSAGES 對應介面訊息):資料不齊不能算完成
+EXIT_FAILED = 1
 EXIT_INCOMPLETE = 5
 EXIT_SEC_REFUSED = 6
+EXIT_PARTIAL = 7   # 檔案都在,但有些公司沒抓到:可以用,但結果會少這些公司
 
 
 def say(msg: str) -> None:
@@ -89,16 +91,21 @@ def show_plan(t: dict) -> None:
         f"SEC 最多 {n_sec(t)} 次(約 {m['sec']:.0f} 分鐘);合計約 {sum(m.values()):.0f} 分鐘,之後在本機計算約 10–20 分鐘")
 
 
+def sec_refusal(e: Exception) -> str | None:
+    """SEC 明確拒絕(不是網路問題)時回傳給使用者看的原因;拒絕後逐檔重試也不會成功,還會加重對方負擔。"""
+    code = getattr(getattr(e, "response", None), "status_code", None)
+    if code in (401, 403, 429):
+        return f"{SEC_REFUSED}(HTTP {code}),請到設定確認名字與聯絡信箱是真實的,或稍後再試"
+    return None
+
+
 def sec_access_error() -> str | None:
     """先試 SEC 對照表:被拒絕或連不上就回傳原因,不要逐檔重試,也不要誤報成「對照表找不到」。"""
     from .sources import sec
     try:
         sec.tickers()
     except Exception as e:  # noqa: BLE001  任何失敗都要回報原因
-        code = getattr(getattr(e, "response", None), "status_code", None)
-        if code in (401, 403, 429):
-            return f"{SEC_REFUSED}(HTTP {code}),請到設定確認名字與聯絡信箱是真實的,或稍後再試"
-        return f"SEC 連不上({type(e).__name__})"
+        return sec_refusal(e) or f"SEC 連不上({type(e).__name__})"
     return None
 
 
@@ -151,6 +158,10 @@ def download(t: dict) -> list[str]:
         try:
             sec.companyfacts(cik)
         except Exception as e:  # noqa: BLE001
+            refused = sec_refusal(e)
+            if refused:   # 對照表可能來自快取,真正被拒絕是在這裡才知道
+                bad.append(refused)
+                break
             bad.append(f"SEC {s}:{type(e).__name__}")
         if i % 10 == 0 or i == len(t["sec"]):
             say(f"SEC {i}/{len(t['sec'])}")
@@ -210,16 +221,22 @@ def main(argv=None) -> int:
         return 4
     if bad:
         say(f"有 {len(bad)} 項沒抓到(稍後重跑這支腳本會再補):" + "、".join(bad[:15]))
+    refused = any(x.startswith(SEC_REFUSED) for x in bad)
     rc = compute(tw + us if subset else None)
     if rc != 0:
         say(f"本機計算失敗(結束碼 {rc});把上面的訊息貼給開發者,或重跑一次")
-        return rc
+        # 計算的結束碼不直接傳回去:它和這裡的結束碼是兩回事,傳回去介面會顯示錯的訊息
+        return EXIT_SEC_REFUSED if refused and us else EXIT_FAILED
     missing = incomplete_markets(tw, us, config.DATA_DIR)
     if missing:
         say(f"沒有完成:{'、'.join(missing)} 的回測資料不齊。修好上面列的問題後再跑一次,已下載的資料會保留。")
-        return EXIT_SEC_REFUSED if any(x.startswith(SEC_REFUSED) for x in bad) else EXIT_INCOMPLETE
+        return EXIT_SEC_REFUSED if refused and "US" in missing else EXIT_INCOMPLETE
     if bad:
         say(f"完成,但有 {len(bad)} 項沒抓到,結果會少這些資料;再跑一次可以補。")
-    else:
-        say("完成。回到網站重新整理,「選風格建模型」第 3 步就能看到排名與過去表現。")
+        return EXIT_SEC_REFUSED if refused else EXIT_PARTIAL
+    say("完成。回到網站重新整理,「選風格建模型」第 3 步就能看到排名與過去表現。")
     return 0
+
+
+if __name__ == "__main__":   # lab/setup_job.py 在原始碼模式用 python -m 執行
+    raise SystemExit(main())

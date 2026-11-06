@@ -821,6 +821,10 @@ def test_release_tools_outside_refs_flags_only_libraries_outside_the_app():
            "\t/usr/local/lib/own.dylib (compatibility version 1.0.0)\n")
     assert tools.outside_refs(out) == ["/opt/homebrew/lib/libssl.3.dylib", "/usr/local/lib/own.dylib"]
     assert tools.outside_refs(out, "/usr/local/lib/own.dylib") == ["/opt/homebrew/lib/libssl.3.dylib"]
+    # 白名單:沒列到的路徑一律算外部
+    assert tools.outside_refs("x:\n\t/Applications/Xcode.app/lib/a.dylib (compatibility version 1.0.0)\n") == ["/Applications/Xcode.app/lib/a.dylib"]
+    lc = "Load command 12\n          cmd LC_RPATH\n      cmdsize 32\n         path @loader_path/. (offset 12)\nLoad command 13\n          cmd LC_RPATH\n      cmdsize 40\n         path /opt/homebrew/lib (offset 12)\n"
+    assert tools.outside_rpaths(lc) == ["/opt/homebrew/lib"]
 
 
 def _release_tools():
