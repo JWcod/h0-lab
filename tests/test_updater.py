@@ -803,3 +803,30 @@ def test_no_private_key_material_in_repo():
     root = Path(__file__).resolve().parent.parent
     assert (root / "packaging" / "update_public_key.txt").read_text().strip() == "" or len(base64.b64decode((root / "packaging" / "update_public_key.txt").read_text().strip())) == 32
     assert "H0_UPDATE_SIGNING_KEY" not in (root / ".env.example").read_text(encoding="utf-8")
+
+
+def test_release_tools_parse_minos_takes_the_highest_and_ignores_sdk():
+    sys_path_tools = _release_tools()
+    out = "x (architecture arm64):\nLoad command 9\n      cmd LC_BUILD_VERSION\n platform MACOS\n    minos 11.0\n      sdk 15.2\n   ntools 1\n     tool LD\n  version 1115.7.3\nb:\n    minos 14.0\n"
+    assert sys_path_tools.parse_minos(out) == (14, 0)
+    assert sys_path_tools.parse_minos("x:\n cmd LC_VERSION_MIN_MACOSX\n version 10.9\n") is None
+
+
+def test_release_tools_outside_refs_flags_only_libraries_outside_the_app():
+    tools = _release_tools()
+    out = ("/a/b.so:\n\t@rpath/own.dylib (compatibility version 1.0.0, current version 1.0.0)\n"
+           "\t/usr/lib/libSystem.B.dylib (compatibility version 1.0.0)\n"
+           "\t/System/Library/Frameworks/AppKit.framework/AppKit (compatibility version 1.0.0)\n"
+           "\t/opt/homebrew/lib/libssl.3.dylib (compatibility version 3.0.0)\n"
+           "\t/usr/local/lib/own.dylib (compatibility version 1.0.0)\n")
+    assert tools.outside_refs(out) == ["/opt/homebrew/lib/libssl.3.dylib", "/usr/local/lib/own.dylib"]
+    assert tools.outside_refs(out, "/usr/local/lib/own.dylib") == ["/opt/homebrew/lib/libssl.3.dylib"]
+
+
+def _release_tools():
+    import importlib.util
+    root = Path(__file__).resolve().parent.parent
+    spec = importlib.util.spec_from_file_location("release_tools", root / "packaging" / "release_tools.py")
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod

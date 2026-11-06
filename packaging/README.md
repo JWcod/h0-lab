@@ -68,7 +68,9 @@ draft 和 prerelease 都不會被 App 看到,想先給少數人試可以發 prer
 | `update-manifest.json`、`.sig` | 更新資訊與 Ed25519 簽章 |
 | `SHA256SUMS.txt`、`THIRD_PARTY_NOTICES.txt` | 雜湊與第三方授權清單 |
 
-**系統需求**:Apple Silicon、macOS 14 以上(打包進來的 scipy 等函式庫最低要求,`LSMinimumSystemVersion` 也設成 14.0)。不提供 Intel 版。
+**系統需求**:Apple Silicon、macOS 14 以上(打包進來的 scipy 等函式庫最低要求,`LSMinimumSystemVersion` 也設成 14.0)。不提供 Intel 版。打包機器是 `macos-15`(`macos-14` runner 已在 2026-11-02 退役),`release_tools.py check-portable` 會擋下要求更新版 macOS 或依賴 App 外面函式庫的版本。
+
+**乾淨機器測試**:Actions 手動跑 `Clean machine test`,在全新的 macOS 15、26 上安裝並啟動 DMG(`packaging/clean_machine_test.sh`),勾 online 時 macOS 15 再抓少量資料。執行紀錄公開後別人看得到,所以腳本只印通過或失敗,抓到的資料不離開 runner。它測不到 Gatekeeper 畫面、原生視窗和實際操作,發版前仍要用另一個 macOS 使用者帳號實測一次。
 
 ## 本機打包(開發用)
 

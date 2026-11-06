@@ -51,6 +51,6 @@ app = BUNDLE(
         "LSMinimumSystemVersion": "14.0",   # 打包進來的 scipy 等函式庫最低要 macOS 14(otool 掃過)
         "LSApplicationCategoryType": "public.app-category.finance",
         "NSHighResolutionCapable": True,
-        "NSHumanReadableCopyright": "MIT License. Research use only; not investment advice.",
+        "NSHumanReadableCopyright": "Apache License 2.0. Research use only; not investment advice.",
     },
 )

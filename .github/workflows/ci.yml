@@ -16,6 +16,8 @@ concurrency:
 jobs:
   test:
     name: ruff + pytest (${{ matrix.os }}, Python 3.13, offline)
+    # While the repo is private, macOS minutes are limited, so dependency bump PRs skip CI. Public repos run everything.
+    if: ${{ !(github.event.repository.private && github.actor == 'dependabot[bot]') }}
     runs-on: ${{ matrix.os }}
     timeout-minutes: 30
     strategy:

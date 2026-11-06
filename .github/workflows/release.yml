@@ -53,7 +53,7 @@ jobs:
   build:
     name: 打包(Apple Silicon)
     needs: test
-    runs-on: macos-14
+    runs-on: macos-15
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
@@ -83,6 +83,7 @@ jobs:
       - name: 發布前檢查(不是測試版、公鑰與版本正確、能啟動)
         run: |
           "${RUNNER_TEMP}/bvenv/bin/python" packaging/release_tools.py check-app "${RUNNER_TEMP}/out/dist/H0 Lab.app" --version "${VERSION}"
+          "${RUNNER_TEMP}/bvenv/bin/python" packaging/release_tools.py check-portable "${RUNNER_TEMP}/out/dist/H0 Lab.app"
           "${RUNNER_TEMP}/out/dist/H0 Lab.app/Contents/MacOS/H0 Lab" --self-test
       # 公證(預留):四個 Apple secret 都設好才執行;沒設就維持 ad-hoc,流程照跑
       - name: Apple 簽章與公證(有憑證才執行)
@@ -140,7 +141,7 @@ jobs:
   draft-release:
     name: 簽章並建立 draft release
     needs: build
-    runs-on: macos-14
+    runs-on: macos-15
     timeout-minutes: 15
     # 簽章私鑰放在這個 Environment:設定成要人工批准、只允許 v* tag(packaging/README.md)
     environment: release

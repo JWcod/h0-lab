@@ -8,6 +8,7 @@
     python packaging/release_tools.py checksums dist
     python packaging/release_tools.py notices --out-dir dist
     python packaging/release_tools.py check-app "dist/H0 Lab.app" --version 0.2.0
+    python packaging/release_tools.py check-portable "dist/H0 Lab.app"
 私鑰絕不進 repo、.env.example、log;這支程式不印私鑰。
 """
 from __future__ import annotations
@@ -17,6 +18,9 @@ import base64
 import hashlib
 import json
 import os
+import plistlib
+import re
+import subprocess
 import sys
 from pathlib import Path
 
@@ -32,6 +36,9 @@ PRODUCT = "h0-lab"
 # 只列打包工具,不算進 App 的第三方清單
 BUILD_ONLY = {"pyinstaller", "pyinstaller-hooks-contrib", "altgraph", "macholib", "cryptography", "pip", "setuptools", "packaging",
               "pytest", "ruff", "iniconfig", "pluggy", "pygments"}
+# Mach-O 執行檔開頭的 4 個位元組:64 位元(兩種位元組順序)與 universal
+MACHO_MAGIC = {b"\xcf\xfa\xed\xfe", b"\xfe\xed\xfa\xcf", b"\xca\xfe\xba\xbe", b"\xbe\xba\xfe\xca"}
+OUTSIDE_PREFIXES = ("/opt/", "/usr/local/", "/Library/Frameworks/", "/Users/")
 
 
 def sha256_file(path: Path) -> str:
@@ -159,6 +166,52 @@ def cmd_check_app(a) -> int:
     return 0
 
 
+def is_macho(path: Path) -> bool:
+    try:
+        with open(path, "rb") as f:
+            return f.read(4) in MACHO_MAGIC
+    except OSError:
+        return False
+
+
+def parse_minos(vtool_output: str) -> tuple[int, ...] | None:
+    """vtool -show-build 的輸出裡最高的 minos;舊格式的執行檔沒有這一行,回傳 None。"""
+    found = [tuple(int(x) for x in m.split(".")) for m in re.findall(r"^\s*minos\s+([\d.]+)\s*$", vtool_output, re.M)]
+    return max(found) if found else None
+
+
+def outside_refs(otool_output: str, own_id: str = "") -> list[str]:
+    """otool -L 的輸出裡指向 App 外面、一般 Mac 不會有的函式庫(/usr/lib 和 /System 是系統內建的)。"""
+    refs = [ln.strip().split(" (")[0] for ln in otool_output.splitlines()[1:] if ln.strip()]
+    return [r for r in refs if r != own_id and r.startswith(OUTSIDE_PREFIXES)]
+
+
+def cmd_check_portable(a) -> int:
+    """打包進來的函式庫不能要求比 Info.plist 宣告更新的 macOS,也不能依賴 App 外面的 Homebrew、Python。
+
+    build 機器換成新版 macOS 時,這項檢查確認使用者端的最低版本沒有被默默拉高。"""
+    app = Path(a.app)
+    with open(app / "Contents" / "Info.plist", "rb") as f:
+        declared = tuple(int(x) for x in plistlib.load(f)["LSMinimumSystemVersion"].split("."))
+    too_new, outside, n = [], [], 0
+    for p in sorted(x for x in app.rglob("*") if x.is_file() and not x.is_symlink() and is_macho(x)):
+        n += 1
+        rel = p.relative_to(app)
+        build = subprocess.run(["/usr/bin/vtool", "-show-build", str(p)], capture_output=True, text=True, check=False).stdout
+        minos = parse_minos(build)
+        if minos and minos > declared:
+            too_new.append(f"{rel}(要 macOS {'.'.join(map(str, minos))})")
+        own = subprocess.run(["/usr/bin/otool", "-D", str(p)], capture_output=True, text=True, check=False).stdout.splitlines()
+        refs = subprocess.run(["/usr/bin/otool", "-L", str(p)], capture_output=True, text=True, check=False).stdout
+        outside += [f"{rel} → {r}" for r in outside_refs(refs, own[-1].strip() if len(own) > 1 else "")]
+    if not n:
+        raise SystemExit("App 裡找不到任何執行檔")
+    if too_new or outside:
+        raise SystemExit("不能發布:\n" + "\n".join(too_new + outside))
+    print(f"check-portable 通過:{n} 個執行檔,最低 macOS {'.'.join(map(str, declared))},沒有依賴 App 外面的函式庫")
+    return 0
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description="H0 Lab 發版工具")
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -183,6 +236,9 @@ def main(argv=None) -> int:
     p.add_argument("app")
     p.add_argument("--version", required=True)
     p.set_defaults(fn=cmd_check_app)
+    p = sub.add_parser("check-portable")
+    p.add_argument("app")
+    p.set_defaults(fn=cmd_check_portable)
     a = ap.parse_args(argv)
     return a.fn(a)
 
