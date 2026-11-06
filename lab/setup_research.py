@@ -43,7 +43,7 @@ SEC_REFUSED = "SEC 拒絕連線"
 EXIT_FAILED = 1
 EXIT_INCOMPLETE = 5
 EXIT_SEC_REFUSED = 6
-EXIT_PARTIAL = 7   # 檔案都在,但有些公司沒抓到:可以用,但結果會少這些公司
+EXIT_PARTIAL = 7   # 檔案都在,但有些資料沒抓到:可以用,但結果會少這些資料
 
 
 def say(msg: str) -> None:
@@ -169,13 +169,18 @@ def download(t: dict) -> list[str]:
     return bad
 
 
-def compute(symbols: list[str] | None) -> int:
+def wanted_universes(tw: list[str], us: list[str]) -> str:
+    """只算這次有要建的市場:另一個市場沒有資料,傳給 judge 只會多算一個空的股票池。"""
+    return ",".join(u for u, symbols in (("tw_large40", tw), ("us_large40", us)) if symbols)
+
+
+def compute(symbols: list[str] | None, universes: str = UNIVERSES) -> int:
     """在本機算 bt_pit(離線、子程序:離線模式要在 import lab 之前設定)。"""
     env = dict(os.environ, INVEST_LAB_OFFLINE="1", INVEST_LAB_DATA_DIR=str(config.DATA_DIR),
                INVEST_LAB_OUT_DIR=str(config.DATA_DIR))
     base = runtime.module_argv("lab.research.backtest_pit")   # 打包版沒有 python -m,改走 App 執行檔
     extra = ["--symbols", ",".join(symbols)] if symbols else ["--symbols", ",".join(s for s, _ in TW_LARGE + US_LARGE)]
-    for step in (["build"], ["judge", "--universes", UNIVERSES]):
+    for step in (["build"], ["judge", "--universes", universes]):
         say(f"本機計算:{step[0]}(不用網路)")
         r = subprocess.run(base + step + extra, cwd=str(config.ROOT), env=env)
         if r.returncode != 0:
@@ -222,20 +227,28 @@ def main(argv=None) -> int:
     if bad:
         say(f"有 {len(bad)} 項沒抓到(稍後重跑這支腳本會再補):" + "、".join(bad[:15]))
     refused = any(x.startswith(SEC_REFUSED) for x in bad)
-    rc = compute(tw + us if subset else None)
+
+    def finish(code: int) -> int:
+        """記下結果:介面重新開啟後才知道這次沒有完全成功,要繼續顯示原因和按鈕。"""
+        from .setup_job import EXIT_MESSAGES
+        from .setup_status import save_research_result
+        save_research_result(EXIT_MESSAGES.get(code, "failed"))
+        return code
+
+    rc = compute(tw + us if subset else None, wanted_universes(tw, us))
     if rc != 0:
         say(f"本機計算失敗(結束碼 {rc});把上面的訊息貼給開發者,或重跑一次")
         # 計算的結束碼不直接傳回去:它和這裡的結束碼是兩回事,傳回去介面會顯示錯的訊息
-        return EXIT_SEC_REFUSED if refused and us else EXIT_FAILED
+        return finish(EXIT_SEC_REFUSED if refused and us else EXIT_FAILED)
     missing = incomplete_markets(tw, us, config.DATA_DIR)
     if missing:
         say(f"沒有完成:{'、'.join(missing)} 的回測資料不齊。修好上面列的問題後再跑一次,已下載的資料會保留。")
-        return EXIT_SEC_REFUSED if refused and "US" in missing else EXIT_INCOMPLETE
+        return finish(EXIT_SEC_REFUSED if refused and "US" in missing else EXIT_INCOMPLETE)
     if bad:
         say(f"完成,但有 {len(bad)} 項沒抓到,結果會少這些資料;再跑一次可以補。")
-        return EXIT_SEC_REFUSED if refused else EXIT_PARTIAL
+        return finish(EXIT_SEC_REFUSED if refused else EXIT_PARTIAL)
     say("完成。回到網站重新整理,「選風格建模型」第 3 步就能看到排名與過去表現。")
-    return 0
+    return finish(0)
 
 
 if __name__ == "__main__":   # lab/setup_job.py 在原始碼模式用 python -m 執行

@@ -436,6 +436,7 @@ def plan(universes=None, symbols=None) -> dict:
     if symbols is not None:
         keep = set(symbols)
         out = {u: [(d, s) for d, s in pairs if s in keep] for u, pairs in out.items()}
+        out = {u: pairs for u, pairs in out.items() if pairs}   # 空的股票池沒有東西可算,留著會讓 judge 在合併空表時崩潰
     return out
 
 

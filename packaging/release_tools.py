@@ -180,10 +180,15 @@ def parse_minos(vtool_output: str) -> tuple[int, ...] | None:
     return max(found) if found else None
 
 
-def outside_refs(otool_output: str, own_id: str = "") -> list[str]:
+def own_ids(otool_d_output: str) -> set[str]:
+    """otool -D 列出的函式庫自己的名字;包含多種架構的檔案每個架構各有一個。"""
+    return {ln.strip() for ln in otool_d_output.splitlines() if ln.strip() and not ln.rstrip().endswith(":")}
+
+
+def outside_refs(otool_output: str, own: set[str] | frozenset[str] = frozenset()) -> list[str]:
     """otool -L 的輸出裡不在白名單的函式庫:只有 App 內部(@)和系統內建(/usr/lib、/System)是每台 Mac 都有的。"""
     refs = [ln.strip().split(" (")[0] for ln in otool_output.splitlines() if ln.strip() and not ln.rstrip().endswith(":")]
-    return [r for r in refs if r != own_id and not r.startswith(ALLOWED_REF_PREFIXES)]
+    return [r for r in refs if r not in own and not r.startswith(ALLOWED_REF_PREFIXES)]
 
 
 def outside_rpaths(otool_load_commands: str) -> list[str]:
@@ -214,8 +219,8 @@ def cmd_check_portable(a) -> int:
         minos = parse_minos(_tool("/usr/bin/vtool", "-show-build", str(p)))
         if minos and minos > declared:
             too_new.append(f"{rel}(要 macOS {'.'.join(map(str, minos))})")
-        own = _tool("/usr/bin/otool", "-D", str(p)).splitlines()
-        outside += [f"{rel} → {r}" for r in outside_refs(_tool("/usr/bin/otool", "-L", str(p)), own[-1].strip() if len(own) > 1 else "")]
+        own = own_ids(_tool("/usr/bin/otool", "-D", str(p)))
+        outside += [f"{rel} → {r}" for r in outside_refs(_tool("/usr/bin/otool", "-L", str(p)), own)]
         outside += [f"{rel} → rpath {r}" for r in outside_rpaths(_tool("/usr/bin/otool", "-l", str(p)))]
     if not n:
         raise SystemExit("App 裡找不到任何執行檔")

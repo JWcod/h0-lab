@@ -820,11 +820,75 @@ def test_release_tools_outside_refs_flags_only_libraries_outside_the_app():
            "\t/opt/homebrew/lib/libssl.3.dylib (compatibility version 3.0.0)\n"
            "\t/usr/local/lib/own.dylib (compatibility version 1.0.0)\n")
     assert tools.outside_refs(out) == ["/opt/homebrew/lib/libssl.3.dylib", "/usr/local/lib/own.dylib"]
-    assert tools.outside_refs(out, "/usr/local/lib/own.dylib") == ["/opt/homebrew/lib/libssl.3.dylib"]
+    assert tools.outside_refs(out, {"/usr/local/lib/own.dylib"}) == ["/opt/homebrew/lib/libssl.3.dylib"]
+    # 多種架構的檔案每個架構各列一次自己的名字
+    fat = "/a/b.so (architecture x86_64):\n/usr/local/lib/own.dylib\n/a/b.so (architecture arm64):\n/usr/local/lib/own-arm.dylib\n"
+    assert tools.own_ids(fat) == {"/usr/local/lib/own.dylib", "/usr/local/lib/own-arm.dylib"}
+    assert tools.own_ids("/a/b:\n") == set()
     # 白名單:沒列到的路徑一律算外部
     assert tools.outside_refs("x:\n\t/Applications/Xcode.app/lib/a.dylib (compatibility version 1.0.0)\n") == ["/Applications/Xcode.app/lib/a.dylib"]
     lc = "Load command 12\n          cmd LC_RPATH\n      cmdsize 32\n         path @loader_path/. (offset 12)\nLoad command 13\n          cmd LC_RPATH\n      cmdsize 40\n         path /opt/homebrew/lib (offset 12)\n"
     assert tools.outside_rpaths(lc) == ["/opt/homebrew/lib"]
+
+
+def _portable_app(tmp_path, tools, *, minimum="14.0"):
+    import plistlib
+    contents = tmp_path / "H0 Lab.app" / "Contents"
+    (contents / "MacOS").mkdir(parents=True)
+    (contents / "Info.plist").write_bytes(plistlib.dumps({"LSMinimumSystemVersion": minimum}))
+    (contents / "MacOS" / "H0 Lab").write_bytes(next(iter(tools.MACHO_MAGIC)) + b"\0" * 16)
+    (contents / "MacOS" / "note.txt").write_text("not a binary", encoding="utf-8")
+    return contents.parent
+
+
+def _fake_macho_tools(tools, monkeypatch, *, minos="14.0", refs="", rpaths=""):
+    calls = []
+
+    def fake(*cmd):
+        calls.append(cmd[:2])
+        if cmd[0].endswith("vtool"):
+            return f"x:\n    minos {minos}\n"
+        return {"-D": "x:\n", "-L": f"x:\n{refs}", "-l": rpaths}[cmd[1]]
+    monkeypatch.setattr(tools, "_tool", fake)
+    return calls
+
+
+def test_check_portable_passes_a_clean_app_and_checks_only_binaries(tmp_path, monkeypatch, capsys):
+    from types import SimpleNamespace
+    tools = _release_tools()
+    calls = _fake_macho_tools(tools, monkeypatch, refs="\t/usr/lib/libSystem.B.dylib (compatibility version 1.0.0)\n")
+    assert tools.cmd_check_portable(SimpleNamespace(app=str(_portable_app(tmp_path, tools)))) == 0
+    assert len(calls) == 4 and "1 個執行檔" in capsys.readouterr().out
+
+
+@pytest.mark.parametrize("fake,expect", [
+    ({"minos": "15.0"}, "要 macOS 15.0"),
+    ({"refs": "\t/opt/homebrew/lib/libssl.3.dylib (compatibility version 3.0.0)\n"}, "/opt/homebrew/lib/libssl.3.dylib"),
+    ({"rpaths": "Load command 1\n          cmd LC_RPATH\n      cmdsize 40\n         path /opt/homebrew/lib (offset 12)\n"}, "rpath /opt/homebrew/lib"),
+])
+def test_check_portable_refuses_an_app_that_needs_something_outside(tmp_path, monkeypatch, fake, expect):
+    from types import SimpleNamespace
+    tools = _release_tools()
+    _fake_macho_tools(tools, monkeypatch, **fake)
+    with pytest.raises(SystemExit) as e:
+        tools.cmd_check_portable(SimpleNamespace(app=str(_portable_app(tmp_path, tools))))
+    assert expect in str(e.value)
+
+
+def test_check_portable_stops_when_a_tool_fails_or_the_app_is_empty(tmp_path, monkeypatch):
+    """工具失敗時輸出是空的,不能當成「沒有問題」。"""
+    from types import SimpleNamespace
+    tools = _release_tools()
+    app = _portable_app(tmp_path, tools)
+    failed = SimpleNamespace(returncode=1, stdout="", stderr="")
+    monkeypatch.setattr(tools.subprocess, "run", lambda *a, **k: failed)
+    with pytest.raises(SystemExit) as e:
+        tools.cmd_check_portable(SimpleNamespace(app=str(app)))
+    assert "失敗" in str(e.value)
+    (app / "Contents" / "MacOS" / "H0 Lab").write_text("no binaries now", encoding="utf-8")
+    with pytest.raises(SystemExit) as e:
+        tools.cmd_check_portable(SimpleNamespace(app=str(app)))
+    assert "找不到任何執行檔" in str(e.value)
 
 
 def _release_tools():

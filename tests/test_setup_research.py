@@ -15,6 +15,12 @@ SR = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(SR)
 
 
+@pytest.fixture(autouse=True)
+def _results_stay_in_tmp(monkeypatch, tmp_path):
+    """main 會寫上次建立的結果,不能寫到真實的資料夾。"""
+    monkeypatch.setattr(LR.config, "OUT_DIR", tmp_path)
+
+
 def _t(n_yahoo=86, n_tr=155, n_fm=240, n_sec=40):
     return {"yahoo": [0] * n_yahoo, "twse_tr": [0] * n_tr, "finmind": [0] * n_fm, "sec": [0] * n_sec}
 
@@ -49,6 +55,65 @@ def test_plan_symbols_filter(monkeypatch):
     assert len(full["tw_large40"]) == len(BP.TW_LARGE)
 
 
+def test_plan_drops_a_universe_left_with_no_symbols(monkeypatch):
+    """2026-11-06 乾淨機器測試:只建台股時 us_large40 過濾後是空的,judge 合併空表時崩潰。"""
+    import pandas as pd
+
+    from lab.research import backtest_pit as BP
+    monkeypatch.setattr(BP.PITStore, "load", staticmethod(lambda p: None))
+    monkeypatch.setattr(BP, "decision_dates", lambda m, macro: [pd.Timestamp("2020-01-31")])
+    assert list(BP.plan(["tw_large40", "us_large40"], ["2330.TW"])) == ["tw_large40"]
+
+
+def test_compute_only_judges_the_markets_being_built(monkeypatch):
+    calls = []
+
+    class Done:
+        returncode = 0
+    monkeypatch.setattr(LR.subprocess, "run", lambda cmd, **k: calls.append(cmd) or Done())
+    assert LR.wanted_universes(["2330.TW"], []) == "tw_large40"
+    assert LR.wanted_universes([], ["AAPL"]) == "us_large40"
+    assert LR.wanted_universes(["2330.TW"], ["AAPL"]) == LR.UNIVERSES
+    assert LR.compute(["2330.TW"], LR.wanted_universes(["2330.TW"], [])) == 0
+    judge = next(c for c in calls if "judge" in c)
+    assert judge[judge.index("--universes") + 1] == "tw_large40"
+
+
+@pytest.mark.parametrize("bad,ready,expected", [
+    (["Yahoo 2330.TW"], ("TW", "US"), "partial"),
+    ([f"{LR.SEC_REFUSED}(HTTP 403)"], ("TW",), "sec_refused"),
+    (["Yahoo AAPL"], ("TW",), "incomplete"),
+])
+def test_unfinished_build_keeps_the_retry_step_after_a_restart(monkeypatch, tmp_path, bad, ready, expected):
+    """檔案都在時步驟會算完成、整張卡片消失,使用者就再也按不到「再試一次」。"""
+    _run_main(monkeypatch, tmp_path, bad, ready=ready)
+    assert setup_status.last_research_result(tmp_path) == expected
+    st = setup_status.status(root=tmp_path, data_dir=tmp_path, out_dir=tmp_path, private_dir=tmp_path, snapshot_dir=tmp_path)
+    step = next(s for s in st["steps"] if s["id"] == "research")
+    assert step["done"] is False and step["last_result"] == expected and "research" in st["pending"]
+
+
+def test_successful_rebuild_clears_the_earlier_result(monkeypatch, tmp_path):
+    _run_main(monkeypatch, tmp_path, ["Yahoo 2330.TW"])
+    assert setup_status.last_research_result(tmp_path) == "partial"
+    _run_main(monkeypatch, tmp_path, [])
+    assert setup_status.last_research_result(tmp_path) is None
+    st = setup_status.status(root=tmp_path, data_dir=tmp_path, out_dir=tmp_path, private_dir=tmp_path, snapshot_dir=tmp_path)
+    assert next(s for s in st["steps"] if s["id"] == "research")["done"] is True
+
+
+@pytest.mark.parametrize("content", ["", "not json", "[]", '{"other": 1}', '{"result": "<script>"}'])
+def test_bad_result_file_is_ignored(tmp_path, content):
+    (tmp_path / setup_status.RESULT_FILE).write_text(content, encoding="utf-8")
+    assert setup_status.last_research_result(tmp_path) is None
+
+
+def test_retry_results_all_have_interface_text():
+    text = (ROOT / "web" / "js" / "update_text.js").read_text(encoding="utf-8")
+    for result in setup_status.RETRY_RESULTS:
+        assert text.count(f'"research.err.{result}"') == 2, result
+
+
 def _http_error(code):
     import requests
     resp = requests.Response()
@@ -62,7 +127,7 @@ def _run_main(monkeypatch, tmp_path, bad, ready=("TW", "US"), args=("--tw", "233
     monkeypatch.setattr(LR.config, "OFFLINE", False)
     monkeypatch.setattr(LR, "todo", lambda tw, us: _t())
     monkeypatch.setattr(LR, "download", lambda t: list(bad))
-    monkeypatch.setattr(LR, "compute", lambda symbols: 0)
+    monkeypatch.setattr(LR, "compute", lambda symbols, universes: 0)
     for market, files in setup_status.RESEARCH_FILES.items():
         if market in ready:
             d = tmp_path / "bt_pit"
@@ -168,18 +233,20 @@ def _sec_only(n=3):
     return {"yahoo": [], "twse_tr": [], "finmind": [], "sec": [f"S{i}" for i in range(n)]}
 
 
-def test_download_stops_before_any_filing_when_the_ticker_list_is_refused(monkeypatch):
+@pytest.mark.parametrize("code", [401, 403, 429])
+def test_download_stops_before_any_filing_when_the_ticker_list_is_refused(monkeypatch, code):
     def refuse():
-        raise _http_error(403)
+        raise _http_error(code)
     calls = _FakeSources.install(monkeypatch, tickers=refuse)
     bad = LR.download(_sec_only())
-    assert calls == [] and len(bad) == 1 and bad[0].startswith(LR.SEC_REFUSED)
+    assert calls == [] and len(bad) == 1 and bad[0].startswith(LR.SEC_REFUSED) and str(code) in bad[0]
 
 
-def test_download_stops_when_filings_are_refused_after_a_cached_ticker_list(monkeypatch):
+@pytest.mark.parametrize("code", [401, 403, 429])
+def test_download_stops_when_filings_are_refused_after_a_cached_ticker_list(monkeypatch, code):
     """Verifier 2026-11-06:對照表有快取時,拒絕要到抓財報才看得到,原本會逐檔重試、結束碼也不對。"""
     def refuse():
-        raise _http_error(403)
+        raise _http_error(code)
     calls = _FakeSources.install(monkeypatch, companyfacts=refuse)
     bad = LR.download(_sec_only())
     assert len(calls) == 1 and len(bad) == 1 and bad[0].startswith(LR.SEC_REFUSED)
@@ -210,7 +277,7 @@ def test_compute_failure_never_leaks_its_own_exit_code(monkeypatch, tmp_path):
     monkeypatch.setattr(LR.config, "DATA_DIR", tmp_path)
     monkeypatch.setattr(LR.config, "OFFLINE", False)
     monkeypatch.setattr(LR, "todo", lambda tw, us: _t())
-    monkeypatch.setattr(LR, "compute", lambda symbols: 2)
+    monkeypatch.setattr(LR, "compute", lambda symbols, universes: 2)
     monkeypatch.setattr(LR, "download", lambda t: [])
     assert LR.main(["--tw", "2330"]) == LR.EXIT_FAILED
     monkeypatch.setattr(LR, "download", lambda t: [f"{LR.SEC_REFUSED}(HTTP 403)"])

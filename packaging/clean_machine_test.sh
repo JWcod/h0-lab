@@ -40,7 +40,7 @@ post() { curl -sS --noproxy '*' --max-time "${3:-60}" -H 'x-requested-with: inve
 show_log() {
   [ -f "$SUPPORT/logs/app.log" ] || return 0
   echo "--- app.log(只列狀態行與例外類型)"
-  grep -E '^\[H0 Lab\]' "$SUPPORT/logs/app.log" | tail -n 5
+  grep -E '^\[H0 Lab\] (http|不開瀏覽器)' "$SUPPORT/logs/app.log" | tail -n 5
   grep -oE '^[A-Za-z_.]*(Error|Exception)\b' "$SUPPORT/logs/app.log" | sort | uniq -c
   echo "---"
 }
@@ -97,7 +97,7 @@ xattr -dr com.apple.quarantine "$APP" 2>/dev/null
 
 echo "== 啟動"
 out="$(limit 300 "$BIN" --self-test 2>/dev/null | tail -n 1)"
-if [ "$(printf '%s' "$out" | jq_perl '$d->{ok} ? "yes" : "no"')" = "yes" ]; then ok "self-test"; else bad "self-test:$out"; fi
+if [ "$(printf '%s' "$out" | jq_perl '$d->{ok} ? "yes" : "no"')" = "yes" ]; then ok "self-test"; else bad "self-test"; fi
 if start_app; then ok "App 能啟動,API 有回應"; else bad "App 啟動後 API 沒有回應"; finish; fi
 [ -d "$SUPPORT" ] && ok "使用者資料夾建好了" || bad "使用者資料夾不在預期位置"
 [ "$(http_code /)" = "200" ] && ok "首頁" || bad "首頁打不開"
@@ -119,7 +119,7 @@ esac
 stop_app
 
 # 只建台股:SEC 要求宣告真實的聯絡方式,測試機器沒有可以宣告的人,所以這裡完全不連 SEC。
-# 美股回測資料要靠真人用自己的聯絡方式實測(docs 的發布檢查清單);SEC 拒絕時的回報由單元測試涵蓋。
+# 美股回測資料由維護者發布前用自己的聯絡方式實測;SEC 拒絕時的回報由單元測試涵蓋。
 info "美股回測資料這裡不驗證(不連 SEC)"
 log="$WORK/setup.log"
 started="$(date +%s)"
@@ -143,7 +143,16 @@ done_flag="$(printf '%s' "$status_json" | jq_perl 'my ($s) = grep { $_->{id} eq 
 # 和介面一樣先搜尋,再用搜尋結果的代號開報告
 for q in 2330 AAPL; do
   sym="$(get "/api/search?q=$q" 60 | jq_perl '$d->{results}[0]{symbol}')"
-  if [ -n "$sym" ]; then ok "搜尋 $q → $sym"; else bad "搜尋 $q 沒有結果"; continue; fi
+  if [ -n "$sym" ]; then
+    ok "搜尋 $q → $sym"
+  elif [ "$q" = AAPL ]; then
+    # 美股搜尋靠外部服務,一時沒有結果不是 App 的問題;報告還是要開得起來
+    info "搜尋 $q 沒有結果,直接用代號"
+    sym="$q"
+  else
+    bad "搜尋 $q 沒有結果"
+    continue
+  fi
   body="$WORK/report.json"
   code="$(curl -s --noproxy '*' -o "$body" -w '%{http_code}' -H 'x-requested-with: invest-lab' --max-time 300 "$BASE/api/report?symbol=$sym")"
   keys="$(jq_perl 'ref $d eq "HASH" ? scalar(keys %$d) : 0' <"$body")"
