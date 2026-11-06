@@ -122,7 +122,13 @@ started="$(date +%s)"
 limit 2400 "$BIN" --h0-run lab.setup_research --tw 2330,2317 --us AAPL,MSFT >"$log" 2>&1
 code=$?
 info "建立資料花了 $(( ($(date +%s) - started) / 60 )) 分鐘"
-if [ "$code" -eq 0 ]; then ok "建立回測資料"; else bad "建立回測資料(結束碼 $code)"; fi
+# SEC 可能拒絕測試用的聯絡字串。不換字串去試它接受哪種:這時只驗證 App 有如實回報,台股要完整,美股流程要靠真人實測
+SEC_REFUSED=no
+case "$code" in
+  0) ok "建立回測資料" ;;
+  6) SEC_REFUSED=yes; ok "SEC 拒絕時如實回報沒有完成(結束碼 6)"; info "美股回測資料這次沒有驗證" ;;
+  *) bad "建立回測資料(結束碼 $code)" ;;
+esac
 # 只印 say() 的進度行(開頭是時間):內容是步驟、代號與檔名,不含抓到的資料
 echo "--- 建立資料的進度(最後 10 行)"
 grep -E '^[0-9]{2}:[0-9]{2}:[0-9]{2} ' "$log" | tail -n 10
@@ -134,7 +140,13 @@ done_flag="$(printf '%s' "$status_json" | jq_perl 'my ($s) = grep { $_->{id} eq 
 for m in TW US; do
   info "$m 回測資料:$(printf '%s' "$status_json" | jq_perl 'my $r = $d->{research}{'"$m"'}; "缺 [" . join(",", @{$r->{missing}}) . "],股票池 [" . join(",", @{$r->{universes}}) . "]"')"
 done
-[ "$done_flag" = "yes" ] && ok "第一次使用狀態顯示資料已建好" || bad "資料建好後狀態還是沒完成($done_flag)"
+if [ "$SEC_REFUSED" = "yes" ]; then
+  [ "$done_flag" = "no" ] && ok "美股缺資料時,狀態如實顯示沒完成" || bad "美股缺資料,狀態卻顯示完成"
+  tw_ready="$(printf '%s' "$status_json" | jq_perl '$d->{research}{TW}{ready} ? "yes" : "no"')"
+  [ "$tw_ready" = "yes" ] && ok "台股回測資料完整" || bad "台股回測資料不完整"
+else
+  [ "$done_flag" = "yes" ] && ok "第一次使用狀態顯示資料已建好" || bad "資料建好後狀態還是沒完成($done_flag)"
+fi
 
 # 和介面一樣先搜尋,再用搜尋結果的代號開報告
 for q in 2330 AAPL; do
@@ -151,7 +163,9 @@ for q in 2330 AAPL; do
   rm -f "$body"
 done
 
-for market in TW US; do
+markets="TW US"
+[ "$SEC_REFUSED" = "yes" ] && markets="TW"
+for market in $markets; do
   out="$(post /api/wizard/preview "{\"template\":\"value\",\"market\":\"$market\"}" 120)"
   valid="$(printf '%s' "$out" | jq_perl '$d->{ok} ? "yes" : "no"')"
   count="$(printf '%s' "$out" | jq_perl '$d->{ranking}{n} // 0')"

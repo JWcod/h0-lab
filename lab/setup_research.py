@@ -38,6 +38,10 @@ FINMIND_JOBS = [("TaiwanStockFinancialStatements", "2013-01-01", "statements_slo
 MACRO = ["^TWII", "^VIX", "^TNX", "TWD=X", "^GSPC", "^SP500TR"]   # backtest_pit.MACRO_SYMS + 美股含息大盤
 TR_START = "2014-01-01"
 UNIVERSES = "tw_large40,us_large40"
+SEC_REFUSED = "SEC 拒絕連線"
+# 結束碼(lab/setup_job.py EXIT_MESSAGES 對應介面訊息):資料不齊不能算完成
+EXIT_INCOMPLETE = 5
+EXIT_SEC_REFUSED = 6
 
 
 def say(msg: str) -> None:
@@ -85,6 +89,26 @@ def show_plan(t: dict) -> None:
         f"SEC 最多 {n_sec(t)} 次(約 {m['sec']:.0f} 分鐘);合計約 {sum(m.values()):.0f} 分鐘,之後在本機計算約 10–20 分鐘")
 
 
+def sec_access_error() -> str | None:
+    """先試 SEC 對照表:被拒絕或連不上就回傳原因,不要逐檔重試,也不要誤報成「對照表找不到」。"""
+    from .sources import sec
+    try:
+        sec.tickers()
+    except Exception as e:  # noqa: BLE001  任何失敗都要回報原因
+        code = getattr(getattr(e, "response", None), "status_code", None)
+        if code in (401, 403, 429):
+            return f"{SEC_REFUSED}(HTTP {code}),請到設定確認名字與聯絡信箱是真實的,或稍後再試"
+        return f"SEC 連不上({type(e).__name__})"
+    return None
+
+
+def incomplete_markets(tw: list[str], us: list[str], data_dir: Path) -> list[str]:
+    """這次要建的市場裡,回測資料還不齊的(和介面的「第一次使用」狀態同一個判斷)。"""
+    from .setup_status import research_ready
+    wanted = [m for m, symbols in (("TW", tw), ("US", us)) if symbols]
+    return [m for m in wanted if not research_ready(m, data_dir / "bt_pit")["ready"]]
+
+
 def download(t: dict) -> list[str]:
     from .sources import finmind as F
     from .sources import sec, twse_hist, yahoo
@@ -115,6 +139,10 @@ def download(t: dict) -> list[str]:
         if i % 10 == 0 or i == len(t["finmind"]):
             say(f"FinMind {i}/{len(t['finmind'])}")
         time.sleep(1.0)
+    sec_error = sec_access_error() if t["sec"] else None
+    if sec_error:
+        bad.append(sec_error)
+        return bad
     for i, s in enumerate(t["sec"], 1):
         cik = sec.cik_for(s, overrides=True)
         if not cik:
@@ -183,8 +211,15 @@ def main(argv=None) -> int:
     if bad:
         say(f"有 {len(bad)} 項沒抓到(稍後重跑這支腳本會再補):" + "、".join(bad[:15]))
     rc = compute(tw + us if subset else None)
-    if rc == 0:
-        say("完成。回到網站重新整理,「選風格建模型」第 3 步就能看到排名與過去表現。")
-    else:
+    if rc != 0:
         say(f"本機計算失敗(結束碼 {rc});把上面的訊息貼給開發者,或重跑一次")
-    return rc
+        return rc
+    missing = incomplete_markets(tw, us, config.DATA_DIR)
+    if missing:
+        say(f"沒有完成:{'、'.join(missing)} 的回測資料不齊。修好上面列的問題後再跑一次,已下載的資料會保留。")
+        return EXIT_SEC_REFUSED if any(x.startswith(SEC_REFUSED) for x in bad) else EXIT_INCOMPLETE
+    if bad:
+        say(f"完成,但有 {len(bad)} 項沒抓到,結果會少這些資料;再跑一次可以補。")
+    else:
+        say("完成。回到網站重新整理,「選風格建模型」第 3 步就能看到排名與過去表現。")
+    return 0

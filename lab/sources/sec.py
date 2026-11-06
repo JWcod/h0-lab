@@ -63,7 +63,9 @@ CONCEPTS = {
 def tickers() -> pd.DataFrame:
     def fetch():
         _require_user_agent()
-        j = requests.get("https://www.sec.gov/files/company_tickers.json", headers=HEADERS, timeout=40).json()
+        r = requests.get("https://www.sec.gov/files/company_tickers.json", headers=HEADERS, timeout=40)
+        r.raise_for_status()   # SEC 拒絕(403)時要看得出原因,不是「對照表找不到」
+        j = r.json()
         return pd.DataFrame([{"ticker": v["ticker"], "cik": int(v["cik_str"]), "title": v["title"]} for v in j.values()])
 
     return cached("sec", "tickers", TTL["universe"], fetch)

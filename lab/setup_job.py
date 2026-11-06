@@ -19,7 +19,7 @@ _started: float | None = None
 _finished: float | None = None
 _exit_code: int | None = None
 _cancelled = False
-EXIT_MESSAGES = {0: "done", 2: "offline", 3: "has_full_research", 4: "no_network"}
+EXIT_MESSAGES = {0: "done", 2: "offline", 3: "has_full_research", 4: "no_network", 5: "incomplete", 6: "sec_refused"}
 
 
 def log_path() -> Path:
