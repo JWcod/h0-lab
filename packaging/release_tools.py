@@ -35,7 +35,8 @@ MANIFEST_NAME = "update-manifest.json"
 PRODUCT = "h0-lab"
 # 只列打包工具,不算進 App 的第三方清單
 BUILD_ONLY = {"pyinstaller", "pyinstaller-hooks-contrib", "altgraph", "macholib", "cryptography", "pip", "setuptools", "packaging",
-              "pytest", "ruff", "iniconfig", "pluggy", "pygments"}
+              "pytest", "ruff", "iniconfig", "pluggy", "pygments",
+              "dmgbuild", "ds_store", "ds-store", "mac_alias", "mac-alias"}
 # Mach-O 執行檔開頭的 4 個位元組:64 位元(兩種位元組順序)與 universal
 MACHO_MAGIC = {b"\xcf\xfa\xed\xfe", b"\xfe\xed\xfa\xcf", b"\xca\xfe\xba\xbe", b"\xbe\xba\xfe\xca"}
 ALLOWED_REF_PREFIXES = ("@", "/usr/lib/", "/System/")

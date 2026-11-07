@@ -13,7 +13,7 @@
 .u-nav .u-ic { width: 18px; text-align: center; color: var(--link); }
 .u-nav .u-x { margin-left: auto; font-variant-numeric: tabular-nums; }
 .u-nav:hover { background: var(--surface2); }
-.u-nav[aria-current="page"] { background: var(--sel-soft); color: var(--text); font-weight: 650; box-shadow: inset 3px 0 0 var(--blue); }
+.u-nav[aria-current="page"] { background: var(--sel-soft); color: var(--text); font-weight: 650; box-shadow: inset 3px 0 0 var(--pop); }
 .u-nav[aria-current="page"] .u-ic, .u-nav[aria-current="page"] .u-x { color: var(--link); }
 .u-main { min-width: 0; display: flex; flex-direction: column; transition: margin-right var(--dur) var(--ease); }
 .u-toolbar { position: sticky; top: 0; z-index: 20; display: flex; align-items: center; gap: 12px; height: 56px; padding: 0 24px; background: var(--chrome);
@@ -280,7 +280,7 @@ button.u-card:hover { box-shadow: 0 0 0 1.5px var(--blue); }
 
 /* ---------- 第二輪:macOS 外框(規格 §5) ---------- */
 /* 整個 app 底下一層很淡的品牌光暈,讓毛玻璃側邊欄與工具列有東西可以透 */
-.app-shell { background: radial-gradient(1100px 620px at 0% 0%, var(--sel-soft), transparent 62%), var(--bg); }
+.app-shell { background: var(--page-bg); background-attachment: fixed; }   /* 60% 底色漸層,捲動時不跟著跑 */
 .app-shell .u-side { background: var(--side-glass); -webkit-backdrop-filter: saturate(180%) blur(24px); backdrop-filter: saturate(180%) blur(24px); }
 .app-shell .u-toolbar { background: var(--chrome-glass); -webkit-backdrop-filter: saturate(180%) blur(20px); backdrop-filter: saturate(180%) blur(20px); gap: 10px; }
 .app-shell .u-toolbar .u-title { font-size: 15px; letter-spacing: -.1px; }

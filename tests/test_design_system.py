@@ -340,3 +340,24 @@ def test_score_text_uses_rating_tokens():
         assert not re.search(r"color:\s*\$\{scoreColor\(", f.read_text(encoding="utf-8")), f.name
     for v in ("--r0", "--r1", "--r2", "--r3", "--r4"):
         assert v in APP_ROOT and v in LIGHT
+
+
+@pytest.mark.parametrize("theme", ["dark", "light"])
+def test_page_wash_keeps_text_contrast(theme):
+    # 60% 底色漸層的每個實色,上面的文字對比要和 --bg 一樣夠
+    t = DARK if theme == "dark" else LIGHT
+    washes = [k for k in t if k.startswith("--wash")]
+    assert washes, theme
+    low = [f"{fg} on {w}" for w in washes for fg, need in [(k, 7.0) for k in MAIN_TEXT] + [(k, 4.5) for k in STATUS_TEXT]
+           if _contrast(t[fg], t[w]) < need]
+    assert not low, low
+    assert "--page-bg:" in TOKENS and "var(--page-bg)" in UI_CSS
+
+
+def test_accent_is_ten_percent_pop():
+    # 10% 強調色:深色是電光萊姆綠,在深色底上要很顯眼;淺色維持品牌藍。上面的字對比要夠
+    assert DARK["--pop"] == DARK["--sel"] and LIGHT["--pop"] == LIGHT["--sel"]
+    for bg in BGS:
+        assert _contrast(DARK["--pop"], DARK[bg]) >= 12, bg
+        assert _contrast(LIGHT["--pop"], LIGHT[bg]) >= 4.5, bg
+    assert _contrast(DARK["--on-accent"], DARK["--sel"]) >= 12 and _contrast(LIGHT["--on-accent"], LIGHT["--sel"]) >= 4.5

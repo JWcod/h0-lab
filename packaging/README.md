@@ -10,6 +10,7 @@
 | `mac_window.py` | 原生視窗(pywebview + 系統 WebKit);外部連結交給系統瀏覽器 |
 | `mac_shell.py` | 開不了視窗時的備案:Dock 圖示 + 瀏覽器 |
 | `h0lab.spec`、`build_app.py`、`make_icon.py` | PyInstaller 設定、打包腳本、圖示 |
+| `dmg/background.svg`、`dmg/background.png`、`dmg/background@2x.png` | DMG 打開時的背景(箭頭、說明文字)。改了 SVG 要重產兩張 PNG:用瀏覽器以 680×380 開 SVG,分別用 1 倍與 2 倍解析度截圖。背景維持中間亮度:Finder 深色模式的圖示名稱是白字、淺色模式是黑字,兩種都要看得清楚。圖示位置在 `build_app.py` 的 `DMG_ICONS` |
 | `release_tools.py` | 產生金鑰、manifest、簽章、checksums、第三方授權清單 |
 | `update_public_key.txt` | 更新公鑰(可以公開);空的時候 App 不能一鍵更新 |
 | `requirements-build.txt` | 打包工具與視窗依賴(pywebview、pyobjc),只裝在獨立 venv;原始碼安裝用不到 |

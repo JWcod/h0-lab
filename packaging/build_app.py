@@ -17,7 +17,6 @@ import platform
 import shutil
 import subprocess
 import sys
-import tempfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -30,6 +29,10 @@ APP = "H0 Lab.app"
 # 檔名固定:README 的下載鈕用 releases/latest/download/<檔名> 直連
 DMG_NAME = "H0-Lab-macOS.dmg"
 UPDATE_ZIP_NAME = "H0-Lab-macOS-update.zip"
+# DMG 打開時的視窗:大小與背景圖(packaging/dmg/background.png,1x 與 @2x)一致;圖示中心對準背景上的玻璃底板與箭頭
+DMG_BACKGROUND = ROOT / "packaging" / "dmg" / "background.png"
+DMG_WINDOW = (680, 380)
+DMG_ICONS = {APP: (170, 200), "Applications": (510, 200)}
 
 
 def run(*cmd, **kw) -> None:
@@ -59,19 +62,40 @@ def make_icon(out: Path, work: Path) -> Path | None:
     return out
 
 
+def dmg_settings(app: Path) -> dict:
+    """dmgbuild 的設定:固定大小的視窗、背景箭頭、大圖示,把 App 拖到 Applications 就裝好。"""
+    icns = sorted((app / "Contents" / "Resources").glob("*.icns"))
+    settings = {
+        "format": "UDZO",
+        "files": [str(app)],
+        "symlinks": {"Applications": "/Applications"},
+        "hide_extensions": [APP],
+        "icon_locations": DMG_ICONS,
+        "background": str(DMG_BACKGROUND),
+        # y 由下往上算,Finder 會把視窗拉回螢幕內;大小和背景圖一樣
+        "window_rect": ((200, 640), DMG_WINDOW),
+        "default_view": "icon-view",
+        "show_status_bar": False, "show_tab_view": False, "show_toolbar": False, "show_pathbar": False,
+        "show_sidebar": False,
+        "icon_size": 128,
+        "text_size": 13,
+    }
+    if icns:
+        settings["icon"] = str(icns[0])   # 掛載後桌面上的磁碟圖示
+    return settings
+
+
 def package(app: Path, out: Path) -> tuple[Path, Path]:
+    import dmgbuild   # packaging/requirements-build.txt;只在打包用的 venv
+
     zip_path, dmg_path = out / UPDATE_ZIP_NAME, out / DMG_NAME
     zip_path.unlink(missing_ok=True)
     dmg_path.unlink(missing_ok=True)
     # ditto 保留 symlink 與權限;不放資源分支與 __MACOSX
     run("/usr/bin/ditto", "-c", "-k", "--norsrc", "--keepParent", app, zip_path)
-    with tempfile.TemporaryDirectory(prefix="h0dmg-") as d:
-        staging = Path(d) / "H0 Lab"
-        staging.mkdir()
-        run("/usr/bin/ditto", app, staging / APP)
-        os.symlink("/Applications", staging / "Applications")
-        run("/usr/bin/hdiutil", "create", "-volname", "H0 Lab", "-srcfolder", staging, "-ov", "-format", "UDZO", dmg_path,
-            stdout=subprocess.DEVNULL)
+    print("+ dmgbuild", dmg_path, flush=True)
+    # lookForHiDPI:自動把 background@2x.png 合進去,Retina 螢幕才不會糊
+    dmgbuild.build_dmg(str(dmg_path), "H0 Lab", settings=dmg_settings(app), lookForHiDPI=True)
     return zip_path, dmg_path
 
 

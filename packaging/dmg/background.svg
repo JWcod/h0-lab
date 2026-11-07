@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="680" height="380" viewBox="0 0 680 380">
+  <!-- DMG 視窗背景(重產 PNG 的方法見 packaging/README.md)。中間亮度:Finder 深色模式的白字、淺色模式的黑字對比都要夠 -->
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#6b7ea8"/>
+      <stop offset="0.55" stop-color="#64789f"/>
+      <stop offset="1" stop-color="#5d7298"/>
+    </linearGradient>
+    <radialGradient id="glowA" cx="0.18" cy="0.12" r="0.6">
+      <stop offset="0" stop-color="#8fa3d6" stop-opacity="0.55"/>
+      <stop offset="1" stop-color="#8fa3d6" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glowB" cx="0.92" cy="1" r="0.65">
+      <stop offset="0" stop-color="#4a9aa4" stop-opacity="0.45"/>
+      <stop offset="1" stop-color="#4a9aa4" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="glass" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.20"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0.07"/>
+    </linearGradient>
+  </defs>
+  <rect width="680" height="380" fill="url(#bg)"/>
+  <rect width="680" height="380" fill="url(#glowA)"/>
+  <rect width="680" height="380" fill="url(#glowB)"/>
+
+  <g font-family="-apple-system, 'SF Pro Text', 'PingFang TC', 'Helvetica Neue', sans-serif" text-anchor="middle" fill="#ffffff">
+    <text x="340" y="58" font-size="19" font-weight="600" letter-spacing="0.2">Drag H0 Lab into Applications</text>
+    <text x="340" y="84" font-size="14" font-weight="500" fill-opacity="0.92">把 H0 Lab 拖到 Applications 資料夾即可安裝</text>
+  </g>
+
+  <!-- 圖示底下的玻璃底板;圖示中心 (170, 200)、(510, 200),見 build_app.py 的 DMG_LAYOUT -->
+  <g stroke="#ffffff" stroke-opacity="0.32" stroke-width="1">
+    <rect x="98" y="128" width="144" height="144" rx="34" fill="url(#glass)"/>
+    <rect x="438" y="128" width="144" height="144" rx="34" fill="url(#glass)"/>
+  </g>
+
+  <!-- 箭頭 -->
+  <g fill="none" stroke="#ffffff" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M276 200 H394" stroke-width="5" stroke-opacity="0.9" stroke-dasharray="1 13"/>
+    <path d="M384 182 L404 200 L384 218" stroke-width="5" stroke-opacity="0.95"/>
+  </g>
+</svg>

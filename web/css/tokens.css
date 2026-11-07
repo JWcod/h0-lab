@@ -2,6 +2,9 @@
    - 網站預設 `<html data-theme="light">`,使用者可在設定改深色或跟系統(prefers-color-scheme)。
    - 淺色區塊同時提供舊頁面樣式 app.css 用到的變數(--panel、--label、--accent…),兩份淺色區塊必須一致(測試會檢查)。
    - 規則 7:深色模式沒有灰色或暗色文字;次要文字用淡藍白,不用透明度淡化。
+   - 配色比例 60 / 30 / 10(2026-11-07):60% 底色(淺色是帶藍的柔和漸層、深色是深海軍藍),30% 卡片與文字,
+     10% 強調色 --pop / --sel 只用在最想讓人按的地方(主要按鈕、目前頁面、勾選);聚焦框與裝飾邊框維持藍色。深色的強調色是電光萊姆綠:
+     偏黃,和「跌」的綠色分得開;不用在漲跌數字上。
    - 文字色的對比由 tests/test_design_system.py 檢查(主要 / 次要文字對所有底色 ≥ 7:1,狀態色 ≥ 4.5:1)。
    - 版面斷點 820px:以上是 macOS(側邊欄、工具列、右側檢視器),以下是 iOS(大標題、底部標籤列、底部彈出卡)。 */
 :root {
@@ -20,8 +23,13 @@
   --chrome-glass: rgba(10, 13, 20, .72);  /* 工具列毛玻璃底 */
   --overlay-glass: rgba(18, 23, 34, .96); /* 指令面板、提示訊息:浮在內容上,幾乎不透明才讀得清楚 */
   --grid-line: rgba(138, 180, 255, .045);  /* 座標紙格線 */
-  --focus: 0 0 0 3px rgba(79, 124, 255, .45);
-  --glow-brand: 0 0 0 1px rgba(79, 124, 255, .35);   /* 只留 1px 邊,不做擴散光暈 */
+  --focus: 0 0 0 3px rgba(79, 124, 255, .5);
+  --glow-brand: 0 0 0 1px rgba(79, 124, 255, .45);   /* 裝飾邊框維持藍色(30%);萊姆綠只給按鈕、目前頁面與聚焦框 */
+  /* 頁面底(60%):左上角藍光、右下角很淡的萊姆綠光;--wash-* 是漸層的實色,測試用它們檢查文字對比 */
+  --wash-top: #0a0d14; --wash-bottom: #0a0d14;
+  --page-bg: radial-gradient(1100px 640px at 0% 0%, rgba(79, 124, 255, .18), transparent 62%),
+    radial-gradient(820px 560px at 100% 100%, rgba(212, 255, 61, .07), transparent 60%),
+    linear-gradient(180deg, var(--wash-top), var(--wash-bottom));
   /* 文字 */
   --text: #ffffff;
   --text2: #cfdcf5;       /* 次要文字:淡藍白,不是灰 */
@@ -33,8 +41,9 @@
   --yellow: #ffd60a;
   --orange: #ff9f0a;
   --red: #ff6961;
-  --sel: #3a5bea;         /* 主要按鈕底色,上面放白字 */
-  --on-accent: #ffffff;   /* 放在 --sel 上的文字 */
+  --sel: #d4ff3d;         /* 主要按鈕底色(10% 強調色:電光萊姆綠) */
+  --on-accent: #0a0d14;   /* 放在 --sel 上的文字:萊姆綠上用深海軍藍字,對比最高 */
+  --pop: #d4ff3d;         /* 強調色的線與標記:目前頁面的側邊色條 */
   --on-status: #000000;   /* 放在 --up / --down 色塊上的文字(漲跌小方塊) */
   /* 漲跌(台灣習慣紅漲綠跌;body.us-colors 對調) */
   --up: var(--red);
@@ -64,7 +73,13 @@
     color-scheme: light;
     --bg: #f5f7fb; --surface: #ffffff; --surface2: #e8ecf4; --chrome: #ffffff; --side: #f9fafc; --sep: #dde3ee; --sel-soft: #e3eaff; --scrim: rgba(0, 0, 0, .35);
     --text: #000000; --text2: #1d2b4a;
-    --blue: #2f55e4; --brand2: #0891b2; --link: #0050c0; --green: #15702f; --yellow: #7d5800; --orange: #b03000; --red: #c0000f; --sel: #2f55e4; --on-status: #ffffff;
+    --blue: #2f55e4; --brand2: #0891b2; --link: #0050c0; --green: #15702f; --yellow: #7d5800; --orange: #b03000; --red: #c0000f; --sel: #2f55e4; --on-accent: #ffffff; --pop: #2f55e4; --on-status: #ffffff;
+    /* 頁面底(60%):白裡帶一點藍的柔和漸層(左上藍、右上天藍、右下淡紫) */
+    --wash1: #d3e0ff; --wash2: #d9ebff; --wash3: #e4defe; --wash-top: #f8faff; --wash-bottom: #eef3fc;
+    --page-bg: radial-gradient(1100px 640px at 0% 0%, var(--wash1), transparent 62%),
+      radial-gradient(900px 560px at 100% 0%, var(--wash2), transparent 60%),
+      radial-gradient(1000px 700px at 85% 100%, var(--wash3), transparent 62%),
+      linear-gradient(180deg, var(--wash-top), var(--wash-bottom));
     --shadow: 0 1px 2px rgba(16, 24, 40, .06), 0 6px 18px rgba(16, 24, 40, .06);
     --side-glass: rgba(249, 250, 252, .82); --chrome-glass: rgba(255, 255, 255, .78); --overlay-glass: rgba(255, 255, 255, .97); --grid-line: rgba(47, 85, 228, .05);
     --focus: 0 0 0 3px rgba(47, 85, 228, .3); --glow-brand: 0 0 0 1px rgba(47, 85, 228, .25);
@@ -80,7 +95,13 @@
   color-scheme: light;
   --bg: #f5f7fb; --surface: #ffffff; --surface2: #e8ecf4; --chrome: #ffffff; --side: #f9fafc; --sep: #dde3ee; --sel-soft: #e3eaff; --scrim: rgba(0, 0, 0, .35);
   --text: #000000; --text2: #1d2b4a;
-  --blue: #2f55e4; --brand2: #0891b2; --link: #0050c0; --green: #15702f; --yellow: #7d5800; --orange: #b03000; --red: #c0000f; --sel: #2f55e4; --on-status: #ffffff;
+  --blue: #2f55e4; --brand2: #0891b2; --link: #0050c0; --green: #15702f; --yellow: #7d5800; --orange: #b03000; --red: #c0000f; --sel: #2f55e4; --on-accent: #ffffff; --pop: #2f55e4; --on-status: #ffffff;
+    /* 頁面底(60%):白裡帶一點藍的柔和漸層(左上藍、右上天藍、右下淡紫) */
+    --wash1: #d3e0ff; --wash2: #d9ebff; --wash3: #e4defe; --wash-top: #f8faff; --wash-bottom: #eef3fc;
+    --page-bg: radial-gradient(1100px 640px at 0% 0%, var(--wash1), transparent 62%),
+      radial-gradient(900px 560px at 100% 0%, var(--wash2), transparent 60%),
+      radial-gradient(1000px 700px at 85% 100%, var(--wash3), transparent 62%),
+      linear-gradient(180deg, var(--wash-top), var(--wash-bottom));
     --shadow: 0 1px 2px rgba(16, 24, 40, .06), 0 6px 18px rgba(16, 24, 40, .06);
     --side-glass: rgba(249, 250, 252, .82); --chrome-glass: rgba(255, 255, 255, .78); --overlay-glass: rgba(255, 255, 255, .97); --grid-line: rgba(47, 85, 228, .05);
     --focus: 0 0 0 3px rgba(47, 85, 228, .3); --glow-brand: 0 0 0 1px rgba(47, 85, 228, .25);
