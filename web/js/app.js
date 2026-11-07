@@ -79,10 +79,11 @@ $("#navColor").onclick = toggleColors;
 $("#navLangTxt").textContent = isEn ? KEY`繁體中文` : "English";
 $("#navLang").onclick = () => setLang(isEn ? "zh-TW" : "en");
 
-// 外觀:跟系統 / 深色 / 淺色(規格 §7「我說了算」)。只在執行時設 <html data-theme>,index.html 本身不強制主題
+// 外觀:跟系統 / 深色 / 淺色(規格 §7「我說了算」)。沒選過就是淺色,和 index.html 的預設一致
+const DEFAULT_THEME = "light";
 const THEMES = [["system", ZH`跟系統`], ["dark", ZH`深色`], ["light", ZH`淺色`]];
 function applyTheme() {
-  const th = THEMES.some(([k]) => k === prefs.theme) ? prefs.theme : "system";
+  const th = THEMES.some(([k]) => k === prefs.theme) ? prefs.theme : DEFAULT_THEME;
   if (th === "system") delete document.documentElement.dataset.theme; else document.documentElement.dataset.theme = th;
   $("#navThemeTxt").textContent = ZH`外觀:` + THEMES.find(([k]) => k === th)[1];
 }
@@ -92,7 +93,7 @@ function setTheme(th) {
   if (state.report || !location.hash.startsWith("#/s/")) route();   // 圖表顏色是畫圖當下讀的,要重畫;分析中不重畫
 }
 $("#navTheme").onclick = () => {
-  const i = THEMES.findIndex(([k]) => k === (prefs.theme || "system"));
+  const i = THEMES.findIndex(([k]) => k === (prefs.theme || DEFAULT_THEME));
   setTheme(THEMES[(i + 1) % THEMES.length][0]);
   toast(ZH`外觀:` + THEMES.find(([k]) => k === prefs.theme)[1]);
 };

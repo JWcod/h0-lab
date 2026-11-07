@@ -7,7 +7,7 @@
 // - 這一頁新寫的文字都走 i18n 字典 t();後端的多語文字用 loc()。所有插入 HTML 的值都經過 esc(數字也是)。
 // - 精靈的狀態放在模組變數 W,換頁再回來會保留。
 import { esc, num, pct, isNum } from "../fmt.js";
-import { ZH, t as t0, loc } from "../i18n/index.js";
+import { ZH, t as t0, loc, isEn } from "../i18n/index.js";
 import * as WA from "../wizardapi.js";
 import { PILLAR_LABEL, PILLARS, MODEL_ID_RE, UNIVERSES, productText } from "../modelapi.js";
 import { backtestResultHTML } from "./models.js";
@@ -383,7 +383,7 @@ function sumHTML() {
   const names = top.slice(0, 3).map((r) => r.name || r.symbol).filter(Boolean);
   const R = W.pv.ranking || {};
   const uni = R.universe_name || universeName(R.universe || "") || "";
-  const txt = names.length ? t("wizard.sum.rank", { universe: uni ? ZH`在「${uni}」裡` : "", names: names.join("、") }) : t("wizard.sum.rankNoName");
+  const txt = names.length ? t("wizard.sum.rank", { universe: uni ? ZH`在「${uni}」裡` : "", names: names.join(isEn ? ", " : "、") }) : t("wizard.sum.rankNoName");
   return `<p class="wz-sum-t">${esc(txt)}</p><p class="u-sub wz-sum-sub">${esc(t("wizard.sum.next"))}${trials}</p>`;
 }
 function updateSum(el) {

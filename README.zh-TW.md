@@ -19,8 +19,8 @@
   <a href="https://github.com/JWcod/h0-lab/releases/latest/download/H0-Lab-macOS.dmg"><img src="https://img.shields.io/badge/Download_for_macOS-.dmg-e8583b?style=for-the-badge&logo=apple&logoColor=white" alt="下載 macOS 版" height="44"></a>
 </p>
 
-<p align="center"><img src=".github/assets/screenshot.png" width="820" alt="H0 Lab 用你建立的模型替股票排名。截圖裡的公司名稱與數字都是虛構的。"></p>
-<p align="center"><sub>截圖裡的公司名稱與數字都是虛構的。</sub></p>
+<p align="center"><img src=".github/assets/demo-zh.webp" width="820" alt="H0 Lab 操作示範:選因子範本、調整訊號、看排名,再看回測。公司名稱與數字都是虛構的。"></p>
+<p align="center"><sub>示範裡的公司名稱與數字都是虛構的。</sub></p>
 
 ## 你會得到什麼
 

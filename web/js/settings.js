@@ -80,7 +80,7 @@ function generalPane(st) {
   return el("div", {},
     row(ut("settings.lang"), seg(ut("settings.lang"), [["zh-TW", "繁體中文"], ["en", "English"]], isEn ? "en" : "zh-TW", setLang)),
     row(ut("settings.theme"), seg(ut("settings.theme"), [["system", ut("settings.theme.system")], ["dark", ut("settings.theme.dark")], ["light", ut("settings.theme.light")]],
-      p.theme || "system", (theme) => setPref({ theme }))),
+      p.theme || "light", (theme) => setPref({ theme }))),
     row(ut("settings.colors"), seg(ut("settings.colors"), [["tw", ut("settings.colors.tw")], ["us", ut("settings.colors.us")]],
       p.colors === "us" ? "us" : "tw", (colors) => setPref({ colors })), ut("settings.colors.help")),
     row(ut("settings.auto"), auto, why, "h0sAuto"),

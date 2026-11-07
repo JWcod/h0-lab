@@ -1,5 +1,5 @@
 /* H0 Lab 設計 token(階段 3 D2;方向見 docs/介面設計方向.md:電腦 macOS 版面、手機 iOS 版面)。
-   - 跟系統設定(prefers-color-scheme)切換深色 / 淺色;`<html data-theme="dark|light">` 可強制(只給測試、檢查用,網站本身不強制)。
+   - 網站預設 `<html data-theme="light">`,使用者可在設定改深色或跟系統(prefers-color-scheme)。
    - 淺色區塊同時提供舊頁面樣式 app.css 用到的變數(--panel、--label、--accent…),兩份淺色區塊必須一致(測試會檢查)。
    - 規則 7:深色模式沒有灰色或暗色文字;次要文字用淡藍白,不用透明度淡化。
    - 文字色的對比由 tests/test_design_system.py 檢查(主要 / 次要文字對所有底色 ≥ 7:1,狀態色 ≥ 4.5:1)。

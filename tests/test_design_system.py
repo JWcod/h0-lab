@@ -294,9 +294,11 @@ def test_app_css_has_no_hardcoded_dark_colors():
     assert not dark_rgba, dark_rgba
 
 
-def test_site_follows_system_theme():
+def test_site_defaults_to_light_theme():
     html = (WEB / "index.html").read_text(encoding="utf-8")
-    assert not re.search(r"<html[^>]*data-theme", html), "index.html 不得強制主題,要跟系統設定"
+    assert re.search(r'<html[^>]*data-theme="light"', html), "沒選過外觀時預設淺色"
+    app = (ROOT / "web" / "js" / "app.js").read_text(encoding="utf-8")
+    assert 'const DEFAULT_THEME = "light"' in app and 'if (th === "system") delete document.documentElement.dataset.theme' in app, "使用者仍可選跟系統"
     assert 'name="color-scheme"' in html
     # 圖表顏色從 CSS 變數讀(淺色模式下文字、格線才看得清楚);views 不寫死深色提示框或白色線
     charts = (WEB / "js" / "charts.js").read_text(encoding="utf-8")

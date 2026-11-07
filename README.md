@@ -18,8 +18,8 @@
   <a href="https://github.com/JWcod/h0-lab/releases/latest/download/H0-Lab-macOS.dmg"><img src="https://img.shields.io/badge/Download_for_macOS-.dmg-e8583b?style=for-the-badge&logo=apple&logoColor=white" alt="Download for macOS" height="44"></a>
 </p>
 
-<p align="center"><img src=".github/assets/screenshot.png" width="820" alt="H0 Lab ranking stocks with a model you built. All names and numbers in this screenshot are fictional."></p>
-<p align="center"><sub>All names and numbers in this screenshot are fictional.</sub></p>
+<p align="center"><img src=".github/assets/demo-en.webp" width="820" alt="Animated demo of H0 Lab: pick a factor template, adjust a signal, see the ranking, then the backtest. All names and numbers are fictional."></p>
+<p align="center"><sub>All names and numbers in this demo are fictional.</sub></p>
 
 ## What You Get
 
