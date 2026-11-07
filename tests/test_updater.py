@@ -711,14 +711,12 @@ def test_save_updates_running_process_and_hides_values(tmp_path, monkeypatch):
     assert "jane@my-domain.org" in env.read_text(encoding="utf-8")
 
 
-def test_sec_guard_blocks_only_when_required(monkeypatch):
+@pytest.mark.parametrize("frozen", [True, False])   # App 和原始碼安裝都一樣:沒有共用的預設聯絡方式
+def test_sec_guard_blocks_without_a_contact(monkeypatch, frozen):
     from lab.sources import sec
     monkeypatch.setattr(sec.config, "SEC_UA_IS_DEFAULT", True)
     monkeypatch.setattr(runtime, "sec_blocked", False)
-    monkeypatch.delenv("INVEST_LAB_SEC_REQUIRE_UA", raising=False)
-    monkeypatch.setattr(runtime, "FROZEN", False)
-    sec._require_user_agent()                        # 原始碼安裝維持舊行為
-    monkeypatch.setenv("INVEST_LAB_SEC_REQUIRE_UA", "1")
+    monkeypatch.setattr(runtime, "FROZEN", frozen)
     with pytest.raises(sec.SecUserAgentRequired):
         sec._require_user_agent()
     assert runtime.sec_blocked is True

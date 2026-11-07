@@ -25,7 +25,7 @@ _build_info: dict | None = None
 _shutdown_hook: Callable[[], None] | None = None
 _last_api_hit = 0.0
 _lock = threading.Lock()
-sec_blocked = False   # 打包版沒填 SEC 聯絡方式、又真的要抓 SEC 資料時設成 True(前端提示填寫)
+sec_blocked = False   # 沒填 SEC 聯絡方式、又真的要抓 SEC 資料時設成 True(前端提示填寫)
 
 
 def app_support_dir() -> Path:
@@ -69,11 +69,6 @@ def module_argv(module: str) -> list[str]:
             raise ValueError(f"打包版不能執行 {module}")
         return [sys.executable, "--h0-run", module]
     return [sys.executable, "-m", module]
-
-
-def sec_ua_required() -> bool:
-    """打包版的每位使用者要宣告自己的 SEC 聯絡方式,不用共用的預設值;原始碼執行維持舊行為。"""
-    return FROZEN or os.environ.get("INVEST_LAB_SEC_REQUIRE_UA") == "1"
 
 
 def set_shutdown_hook(fn: Callable[[], None] | None) -> None:

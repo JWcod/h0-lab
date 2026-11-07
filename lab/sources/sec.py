@@ -1,6 +1,6 @@
 """SEC EDGAR(美國官方、免費):股票清單、10 年以上年度財報(XBRL companyfacts)、申報紀錄。
 
-SEC 要求宣告 User-Agent,設定在 .env 的 SEC_USER_AGENT(預設不含個資)。
+SEC 要求宣告 User-Agent,設定在 .env 的 SEC_USER_AGENT;沒填就不連 SEC。
 """
 from __future__ import annotations
 
@@ -17,11 +17,11 @@ HEADERS = {"User-Agent": SEC_USER_AGENT, "Accept-Encoding": "gzip, deflate"}
 
 
 class SecUserAgentRequired(RuntimeError):
-    """打包版每位使用者要宣告自己的聯絡方式(SEC 規定),還沒填就不連 SEC;前端看到 runtime.sec_blocked 會提示填寫。"""
+    """每位使用者要宣告自己的聯絡方式(SEC 規定),還沒填就不連 SEC;前端看到 runtime.sec_blocked 會提示填寫。"""
 
 
 def _require_user_agent() -> None:
-    if runtime.sec_ua_required() and config.SEC_UA_IS_DEFAULT:
+    if config.SEC_UA_IS_DEFAULT:
         runtime.sec_blocked = True
         raise SecUserAgentRequired("使用 SEC 資料前,請先在設定填寫你的名字與聯絡信箱")
 

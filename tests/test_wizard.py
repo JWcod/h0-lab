@@ -91,6 +91,18 @@ def test_s4_templates_ready_after_merge():
     assert [s["id"] for s in wizard.list_templates("US")] == [i for i in shown if i != "flows_tw"]
 
 
+def test_listed_templates_leave_builtin_fair_value_signal_off():
+    """開源版不提供綜合公平價:範本預設不用它,但使用者在精靈選「普通」或「很重要」還是能打開。"""
+    for tid in TEMPLATE_IDS:
+        if tid in wizard.HIDDEN_TEMPLATES:
+            continue
+        t = wizard.load_template(tid)
+        rows = [m for m in t["metrics"] if m["key"] == "fv_upside"]
+        assert rows and all(m["weight"] == 0 and m.get("enabled", True) for m in rows), tid
+        on = wizard.apply_choices(t, {"signals": {"fv_upside": "normal"}})
+        assert all(m["weight"] == 1 for m in on["metrics"] if m["key"] == "fv_upside"), tid
+
+
 def test_sample_template_hidden_from_wizard():
     """2026-11-03「自建模型優先」:綜合範本 sample(= 出廠模型)不在精靈列出、不能預覽;檔案保留給上面的對照測試。"""
     ids = [s["id"] for s in wizard.list_templates()]

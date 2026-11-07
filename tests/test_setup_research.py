@@ -19,6 +19,7 @@ _spec.loader.exec_module(SR)
 def _results_stay_in_tmp(monkeypatch, tmp_path):
     """main 會寫上次建立的結果,不能寫到真實的資料夾。"""
     monkeypatch.setattr(LR.config, "OUT_DIR", tmp_path)
+    monkeypatch.setattr(LR.config, "SEC_UA_IS_DEFAULT", False)
 
 
 def _t(n_yahoo=86, n_tr=155, n_fm=240, n_sec=40):
@@ -216,6 +217,27 @@ def test_same_items_missing_twice_stops_asking_to_retry(monkeypatch, tmp_path):
     assert _research_step(tmp_path)["done"] is True
     assert _run_main(monkeypatch, tmp_path, ["Yahoo Y"]) == LR.EXIT_PARTIAL
     assert _research_step(tmp_path)["done"] is False
+
+
+def test_us_build_stops_before_downloading_without_an_sec_contact(monkeypatch, tmp_path, capsys):
+    """不要下載完台股才發現美股連不了。"""
+    def no_download(t):
+        raise AssertionError("不該開始下載")
+    monkeypatch.setattr(LR.config, "DATA_DIR", tmp_path)
+    monkeypatch.setattr(LR.config, "OFFLINE", False)
+    monkeypatch.setattr(LR, "todo", lambda tw, us: _t())
+    monkeypatch.setattr(LR, "download", no_download)
+    monkeypatch.setattr(LR.config, "SEC_UA_IS_DEFAULT", True)
+    assert LR.main(["--tw", "2330", "--us", "AAPL"]) == LR.EXIT_SEC_UA_REQUIRED
+    assert "SEC_USER_AGENT" in capsys.readouterr().out
+    assert setup_status.last_research_result(tmp_path) is None
+    from lab import setup_job
+    assert setup_job.EXIT_MESSAGES[LR.EXIT_SEC_UA_REQUIRED] == "sec_ua_required"
+
+
+def test_taiwan_only_build_does_not_need_an_sec_contact(monkeypatch, tmp_path):
+    monkeypatch.setattr(LR.config, "SEC_UA_IS_DEFAULT", True)
+    assert _run_main(monkeypatch, tmp_path, [], ready=("TW",), args=("--tw", "2330")) == 0
 
 
 def test_same_item_with_a_different_error_still_counts_as_the_same(monkeypatch, tmp_path):

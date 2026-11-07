@@ -446,7 +446,7 @@ def test_setup_status_new_user(server):
     """第一次執行引導:假的輸出資料夾是空的 → 回測資料一定還沒齊;不回 token 值。"""
     s, j, _ = _get(server["base"], "/api/setup/status")
     assert s == 200 and j["offline"] is True
-    assert {x["id"] for x in j["steps"]} == {"install", "first_report", "finmind_token", "research"}
+    assert {x["id"] for x in j["steps"]} == {"install", "first_report", "sec_user_agent", "finmind_token", "research"}
     assert j["research"]["TW"]["ready"] is False and "research" in j["pending"]
     assert all(isinstance(v, bool) for v in j["checks"].values())
     _alive(server)

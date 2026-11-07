@@ -151,7 +151,7 @@ function dataPane(local) {
     el("thead", {}, el("tr", {}, el("th", { scope: "col" }, ut("settings.src.name")), el("th", { scope: "col" }, ut("settings.src.what")), el("th", { scope: "col" }, ut("settings.src.key")))),
     el("tbody", {}, ...SOURCES.map(([id, need]) => el("tr", {},
       el("td", {}, ut(`settings.src.${id}`)), el("td", {}, ut(`settings.src.${id}.what`)),
-      el("td", {}, ut(`settings.src.need.${id === "sec" && !local.sec_required ? "optional" : need}`))))));
+      el("td", {}, ut(`settings.src.need.${need}`))))));
   return el("div", {}, form, el("h3", {}, ut("settings.src.title")), table);
 }
 

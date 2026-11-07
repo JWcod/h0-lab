@@ -88,9 +88,8 @@ def today() -> dt.date:
     return dt.date.fromisoformat(v) if v else dt.date.today()
 
 
-# SEC 要求宣告 User-Agent(名稱 + 信箱)。預設用不含個資的佔位信箱(SEC 會擋 localhost 這類格式),
-# 使用者可以在 .env 填自己的聯絡方式。
-SEC_USER_AGENT = os.environ.get("SEC_USER_AGENT") or "invest-lab personal research tool contact@example.com"
+# SEC 要求每位使用者宣告自己的 User-Agent(名稱 + 信箱),所以沒有共用的預設值;沒填就不連 SEC(lab/sources/sec.py)。
+SEC_USER_AGENT = os.environ.get("SEC_USER_AGENT", "")
 SEC_UA_IS_DEFAULT = not os.environ.get("SEC_USER_AGENT")
 FINMIND_TOKEN = os.environ.get("FINMIND_TOKEN", "")  # 免費額度不需要 token;有 token 上限較高
 # FinMind 額度計數檔:跨程序共用,固定在主資料夾(不跟著 DATA_DIR 走,避免指到副本就脫離共用額度)

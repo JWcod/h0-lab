@@ -16,7 +16,7 @@ While running, the app only connects to these hosts. Each host sees your IP addr
 |---|---|---|
 | Yahoo Finance (`query1.finance.yahoo.com`, `query2.finance.yahoo.com`, `fc.yahoo.com`), through the unofficial `yfinance` library | Prices, statements, estimates, profiles, US news | `lab/sources/yahoo.py`, `lab/research/backtest.py`, `scripts/fetch_sp500_prices.py` |
 | `api.finmindtrade.com` | Taiwan statements, monthly revenue, institutional flows. Sends your FinMind token if you set one | `lab/sources/finmind.py` |
-| `www.sec.gov`, `data.sec.gov` | US statements and filings. Sends your `SEC_USER_AGENT`, or a placeholder with no personal details | `lab/sources/sec.py` |
+| `www.sec.gov`, `data.sec.gov` | US statements and filings. Sends your `SEC_USER_AGENT`. Without one, nothing is sent to the SEC | `lab/sources/sec.py` |
 | `openapi.twse.com.tw` | Taiwan daily quotes, valuation, material information | `lab/sources/twse.py`, `lab/sources/mops.py` |
 | `www.twse.com.tw` | Market history for research data (only when you build it) | `lab/sources/twse_hist.py` |
 | `www.tpex.org.tw` | OTC valuation data | `lab/sources/twse.py` |
@@ -66,7 +66,7 @@ If you represent a data provider and have a concern, please [open an issue](http
 |---|---|---|
 | Yahoo Finance(`query1.finance.yahoo.com`、`query2.finance.yahoo.com`、`fc.yahoo.com`,透過非官方的 `yfinance` 套件) | 價格、財報、預估、公司資料、美股新聞 | `lab/sources/yahoo.py`、`lab/research/backtest.py`、`scripts/fetch_sp500_prices.py` |
 | `api.finmindtrade.com` | 台股財報、月營收、籌碼;有設定就會送出你的 FinMind token | `lab/sources/finmind.py` |
-| `www.sec.gov`、`data.sec.gov` | 美股財報與申報;送出你的 `SEC_USER_AGENT`,沒填就送不含個資的預設值 | `lab/sources/sec.py` |
+| `www.sec.gov`、`data.sec.gov` | 美股財報與申報;送出你的 `SEC_USER_AGENT`;沒填就不連 SEC | `lab/sources/sec.py` |
 | `openapi.twse.com.tw` | 台股每日行情、估值、重大訊息 | `lab/sources/twse.py`、`lab/sources/mops.py` |
 | `www.twse.com.tw` | 研究資料用的歷史行情(只在你建立研究資料時) | `lab/sources/twse_hist.py` |
 | `www.tpex.org.tw` | 上櫃估值資料 | `lab/sources/twse.py` |

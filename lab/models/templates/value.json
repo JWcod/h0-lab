@@ -582,7 +582,7 @@
     "bad": -0.3,
     "good": 0.4
    },
-   "weight": 3,
+   "weight": 0,
    "fmt": "pct",
    "note": "綜合公平價 ÷ 現價 − 1",
    "peer_blend": null,

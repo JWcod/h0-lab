@@ -119,8 +119,8 @@ def status(root: Path | None = None, data_dir: Path | None = None, out_dir: Path
                 s["command"], s["job"] = None, True
             elif s["id"] == "finmind_token":
                 s["settings"] = True
-        steps.insert(2, {"id": "sec_user_agent", "done": checks["sec_user_agent"], "optional": False, "network": False,
-                         "requests": 0, "minutes": 1, "settings": True})
+    steps.insert(2, {"id": "sec_user_agent", "done": checks["sec_user_agent"], "optional": False, "network": False,
+                     "requests": 0, "minutes": 1, "settings": True})
     pending = [s["id"] for s in steps if not s["done"] and not s["optional"]]
     return {"offline": config.OFFLINE, "checks": checks, "research": research, "steps": steps,
             "pending": pending, "all_done": not pending}

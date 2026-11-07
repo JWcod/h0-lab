@@ -21,10 +21,11 @@ def _step(st, sid):
 
 def test_new_user_nothing_done(tmp_path, monkeypatch):
     monkeypatch.setattr(config, "FINMIND_TOKEN", "")
+    monkeypatch.setattr(config, "SEC_UA_IS_DEFAULT", True)
     st = S.status(**_dirs(tmp_path))
-    assert [s["id"] for s in st["steps"]] == ["install", "first_report", "finmind_token", "research"]
+    assert [s["id"] for s in st["steps"]] == ["install", "first_report", "sec_user_agent", "finmind_token", "research"]
     assert not any(s["done"] for s in st["steps"])
-    assert st["pending"] == ["install", "first_report", "research"]      # token 是選用,不算待辦
+    assert st["pending"] == ["install", "first_report", "sec_user_agent", "research"]      # token 是選用,不算待辦
     assert st["all_done"] is False
     assert st["research"]["TW"]["ready"] is False and "raw_tw.sqlite" in st["research"]["TW"]["missing"]
     r = _step(st, "research")
@@ -34,6 +35,7 @@ def test_new_user_nothing_done(tmp_path, monkeypatch):
 
 def test_steps_follow_files(tmp_path, monkeypatch):
     monkeypatch.setattr(config, "FINMIND_TOKEN", "")
+    monkeypatch.setattr(config, "SEC_UA_IS_DEFAULT", False)
     d = _dirs(tmp_path)
     (d["root"] / ".env").write_text("FINMIND_TOKEN=\n", encoding="utf-8")
     d["private_dir"].mkdir()

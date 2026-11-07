@@ -19,7 +19,7 @@ _started: float | None = None
 _finished: float | None = None
 _exit_code: int | None = None
 _cancelled = False
-EXIT_MESSAGES = {0: "done", 2: "offline", 3: "has_full_research", 4: "no_network", 5: "incomplete", 6: "sec_refused",
+EXIT_MESSAGES = {0: "done", 2: "offline", 3: "has_full_research", 4: "no_network", 5: "incomplete", 6: "sec_refused", 8: "sec_ua_required",
                  7: "partial"}
 
 
@@ -31,7 +31,7 @@ def start() -> dict:
     global _proc, _started, _finished, _exit_code, _cancelled
     if config.OFFLINE:
         return {"ok": False, "error": "offline"}
-    if runtime.sec_ua_required() and config.SEC_UA_IS_DEFAULT:
+    if config.SEC_UA_IS_DEFAULT:
         return {"ok": False, "error": "sec_ua_required"}
     with _lock:
         if _proc is not None and _proc.poll() is None:

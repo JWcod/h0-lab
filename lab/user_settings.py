@@ -130,5 +130,5 @@ def folders() -> dict[str, str]:
 def public_state() -> dict:
     from . import updater
     return {"auto_check": updater.auto_check_enabled(), "folders": folders(), "has_sec_user_agent": not config.SEC_UA_IS_DEFAULT, "has_finmind_token": bool(config.FINMIND_TOKEN),
-            "sec_required": runtime.sec_ua_required(), "sec_blocked": runtime.sec_blocked, "env_path": str(runtime.env_file()),
+            "sec_blocked": runtime.sec_blocked, "env_path": str(runtime.env_file()),
             "frozen": runtime.FROZEN}

@@ -166,7 +166,7 @@ let secBar = null;
 async function refreshSecBanner() {
   let local;
   try { local = await api("/api/settings/local"); } catch (e) { return; }
-  if (local.sec_required && local.sec_blocked && !local.has_sec_user_agent) {
+  if (local.sec_blocked && !local.has_sec_user_agent) {
     if (secBar?.isConnected) return;
     secBar = el("div", { class: "h0u-bar", role: "status" }, el("span", { class: "h0u-msg" }, ut("sec.banner")),
       el("span", { class: "h0u-acts" }, btn(ut("sec.fill"), () => openSettings("data"), true)));

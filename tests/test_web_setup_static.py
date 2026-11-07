@@ -22,10 +22,13 @@ def test_every_setup_key_is_in_dictionary():
     js = _read(WEB / "js" / "setup.js")
     dic = _read(WEB / "js" / "i18n" / "zh-TW.js")
     keys = {k for k in re.findall(r't\("(setup\.[\w.]+)"', js) if not k.endswith(".")}
-    for sid in (s["id"] for s in setup_status.status()["steps"]):   # t("setup.step." + s.id + ".title")
+    for sid in (s["id"] for s in setup_status.status()["steps"] if s["id"] != "sec_user_agent"):   # 這步的文字在 update_text.js
         keys.add(f"setup.step.{sid}.title")
     missing = [k for k in sorted(keys) if f'"{k}":' not in dic]
     assert not missing, missing
+    text = _read(WEB / "js" / "update_text.js")
+    for key in ("first.sec.title", "first.sec.body"):
+        assert text.count(f'"{key}"') == 2, key   # 中文、英文各一份
 
 
 def test_wired_into_home_and_wizard():

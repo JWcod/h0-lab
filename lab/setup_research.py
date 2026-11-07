@@ -44,6 +44,7 @@ EXIT_FAILED = 1
 EXIT_INCOMPLETE = 5
 EXIT_SEC_REFUSED = 6
 EXIT_PARTIAL = 7   # 檔案都在,但有些資料沒抓到:可以用,但結果會少這些資料
+EXIT_SEC_UA_REQUIRED = 8
 
 
 def say(msg: str) -> None:
@@ -255,6 +256,9 @@ def main(argv=None) -> int:
     if config.OFFLINE:
         say("現在是離線模式(INVEST_LAB_OFFLINE=1),不能下載;拿掉這個設定再跑")
         return 2
+    if us and config.SEC_UA_IS_DEFAULT:   # 先擋:不要下載完台股才發現美股連不了
+        say("美股財報來自 SEC,要先宣告你的名字與聯絡信箱:在 .env 填 SEC_USER_AGENT=名字 信箱,或到網站的設定填寫。")
+        return EXIT_SEC_UA_REQUIRED
     try:
         bad = download(t)
     except ConnectionError as e:

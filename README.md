@@ -93,7 +93,7 @@ Optional settings go in `.env` (see `.env.example`):
 
 | Variable | Meaning |
 |---|---|
-| `SEC_USER_AGENT` | Your name and contact email, as SEC requires |
+| `SEC_USER_AGENT` | Your name and contact email, as SEC requires. Without it the app does not contact the SEC, so US filings are missing |
 | `FINMIND_TOKEN` | Free FinMind token for a higher quota |
 | `INVEST_LAB_PORT` | Port, default 8765. The host always stays `127.0.0.1` |
 

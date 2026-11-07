@@ -94,7 +94,7 @@ H0 Lab 不附帶也不散布市場資料。資料由你的 Mac 直接向免費�
 
 | 變數 | 意思 |
 |---|---|
-| `SEC_USER_AGENT` | 你的名稱與聯絡信箱(SEC 要求) |
+| `SEC_USER_AGENT` | 你的名稱與聯絡信箱(SEC 要求);沒填就不連 SEC,美股財報會缺 |
 | `FINMIND_TOKEN` | 免費的 FinMind token,額度較高 |
 | `INVEST_LAB_PORT` | 埠號,預設 8765;主機一律是 `127.0.0.1` |
 
