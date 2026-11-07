@@ -15,6 +15,8 @@ from typing import Callable
 from urllib.parse import urlsplit
 
 WINDOW_TITLE = "H0 Lab"
+# 網頁載入前看到的視窗底色:和網頁預設的淺色背景(web/css/tokens.css 的 --wash-top)一樣,打開時才不會先閃一片深色
+WINDOW_BG = "#F8FAFF"
 EXIT_GRACE_SECONDS = 5
 _LOCAL_HOSTS = ("127.0.0.1", "localhost")
 _ZH_MENU = {"cocoa.menu.about": "關於", "cocoa.menu.services": "服務", "cocoa.menu.view": "顯示方式", "cocoa.menu.edit": "編輯",
@@ -117,7 +119,7 @@ def run(url: str, port: int, on_quit: Callable[[], None], is_alive: Callable[[],
         webview.settings["ALLOW_DOWNLOADS"] = True      # 匯出報告用
         _install_link_policy(cocoa, port)
         window = webview.create_window(WINDOW_TITLE, url, width=1360, height=880, min_size=(980, 640), text_select=True, zoomable=True,
-                                       background_color="#0B1020")
+                                       background_color=WINDOW_BG)
         bridge = H0LabBridge.alloc().init()
         Foundation.NSNotificationCenter.defaultCenter().addObserver_selector_name_object_(
             bridge, "willTerminate:", AppKit.NSApplicationWillTerminateNotification, None)

@@ -32,3 +32,13 @@ _spec.loader.exec_module(mac_window)
 ])
 def test_classify_url(url, kind):
     assert mac_window.classify_url(url, 8765) == kind
+
+
+def test_window_background_matches_light_default():
+    # App 第一次打開是淺色:網頁載入前露出的視窗底色也要是淺色背景
+    import re
+    tokens = (Path(__file__).resolve().parent.parent / "web" / "css" / "tokens.css").read_text(encoding="utf-8")
+    light = re.search(r':root\[data-theme="light"\]\s*\{(.*?)\n\}', tokens, re.S).group(1)
+    assert re.search(r"--wash-top:\s*(#[0-9a-fA-F]{6})", light).group(1).lower() == mac_window.WINDOW_BG.lower()
+    src = (Path(__file__).resolve().parent.parent / "packaging" / "mac_window.py").read_text(encoding="utf-8")
+    assert "background_color=WINDOW_BG" in src and "#0B1020" not in src
